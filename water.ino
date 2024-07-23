@@ -60,7 +60,7 @@
 //to how long to keep the water running. also select how many total samples you
 //would like to collect to determine moisture levels every time the system checks
 
-#define MOIST_CHECK_INTERVAL 20000   // milliseconds (1 minutes) in between checks
+#define MOIST_CHECK_INTERVAL 20000   // milliseconds (2 minutes) in between checks
 //#define MOIST_CHECK_INTERVAL 3600000 // milliseconds (1 hour) in between checks
 #define MOIST_SAMPLE_INTERVAL 2000   // milliseconds over which to average reading samples
 //#define MOIST_SAMPLE_INTERVAL 5000 // milliseconds over which to average reading samples
@@ -147,35 +147,6 @@ void insertionSort() {
   }
   Serial.println("");
 }
-
-// void selectionSort(){
-//   //sorts moistValues array using selection sort
-
-//   int indexOfMin;  //vars
-//   int pass;        //-
-//   int j;           //-
-
-//   //perform selection sort
-//   for ( pass = 0; pass < MOIST_SAMPLES - 1; pass++ ) { 
-//     indexOfMin = pass; 
-
-//     for ( j = pass + 1; j < MOIST_SAMPLES; j++ ) 
-//       if ( moistValues[j] < moistValues[pass] ) 
-//         indexOfMin = j; 
-
-//     int temp; 
-//     temp = moistValues[pass]; 
-//     moistValues[pass] = moistValues[indexOfMin]; 
-//     moistValues[indexOfMin] = temp; 
-//   }
- 
-//   Serial.print("sorted readings: ");
-//   for(int i=0; i<MOIST_SAMPLES; i++){
-//     Serial.print(moistValues[i]);
-//     Serial.print(" ");
-//   }
-//   Serial.println(""); 
-// }
 
 /**
  * @brief Collects and processes moisture readings from the probe.
@@ -337,18 +308,7 @@ void waterPlant(){
  */
 void setup()                    // run once, when the sketch starts
 {
-  // //set all led pins, power & relay pins
-  // //as outputs
-  // pinMode(onLed,      OUTPUT);  
-  // pinMode(readLed,    OUTPUT);  
-  // pinMode(workLed,    OUTPUT);  
-  // pinMode(dryLed,     OUTPUT);  
-  // pinMode(moistLed,   OUTPUT);  
-  // pinMode(soakedLed,  OUTPUT);  
-  // pinMode(powerPin,   OUTPUT);
-  // pinMode(relayPin,   OUTPUT);  
-
-  // Set all pins as outputs. Original way commented out above.
+  // Set all pins as outputs.
   for (int pin : {onLed, readLed, workLed, dryLed, moistLed, soakedLed, powerPin, relayPin}) {
     pinMode(pin, OUTPUT);
   }
