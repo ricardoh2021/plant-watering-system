@@ -6,7 +6,7 @@
 
 Water 1.0 is an automated plant watering system that uses sensors to measure soil moisture and controls a pump via a relay to water the plant when needed. This project is inspired by the Botanicalls and Growduino concepts.
 
-For more information, visit: [Water 1.0 Project]([http://cs.gettysburg.edu/~martle02/cs450/](http://cs.gettysburg.edu/~tneller/cs450/08fa/Physical_Computing/Plant_Watering.html))
+For more information, visit: [Water 1.0 Project](http://cs.gettysburg.edu/~tneller/cs450/08fa/Physical_Computing/Plant_Watering.html)
 
 ## Changelog
 
