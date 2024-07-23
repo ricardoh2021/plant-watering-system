@@ -34,3 +34,66 @@ Adjust the moisture thresholds based on your plant's needs:
 #define DRY 420               // After not being watered for ~5 days
 #define MOIST 710             // Midpoint between DRY and SOAKED
 #define SOAKED 1000           // Least desired level after watering
+```
+
+## Define constants 
+Configure timing and intervals for moisture checks and watering:
+
+```cpp
+#define MOIST_CHECK_INTERVAL 20000   // Milliseconds between checks (1 minute)
+#define MOIST_SAMPLE_INTERVAL 2000   // Milliseconds for averaging readings
+#define WATER_INTERVAL 3000          // Milliseconds to allow for water flow
+#define MOIST_SAMPLES 10             // Number of samples to average
+#define FAILSAFE_VALUE 200           // Minimum difference in moisture to indicate successful watering
+```
+
+## Program Variables and Board Pins
+
+Configure the pins for LEDs, power, relay, and probe:
+
+```cpp
+// LEDs
+#define onLed 2
+#define readLed 3
+#define workLed 4
+#define dryLed 5
+#define moistLed 6
+#define soakedLed 7
+
+// Probes
+#define powerPin 8
+#define relayPin 9
+#define probePin 0
+```
+
+## Helper Methods
+
+### resetLeds()
+
+Resets all plant status LEDs to the OFF state.
+
+### insertionSort()
+
+Sorts the moisture readings array using the Insertion Sort algorithm for better performance and readability.
+
+### checkMoisture()
+
+Collects and processes moisture readings, determines watering status, and updates the status LEDs.
+
+### waterPlant()
+
+Manages the watering of the plant, activates the relay to dispense water, and includes a failsafe check for equipment servicing.
+
+## Arduino Methods
+
+### setup()
+
+Initializes the Arduino board, sets up pins, and starts serial communication.
+
+### loop()
+
+Main loop that repeatedly checks moisture levels and performs actions based on the readings.
+
+### License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
