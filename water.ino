@@ -7,6 +7,21 @@
  * of Botanicalls and Growduino project concepts.
  *
  * http://cs.gettysburg.edu/~martle02/cs450/
+ *
+ * Changelog:
+ * - 2024-07-22: (Ricardo Hernandez) Optimized and refactored code for better readability and performance. Updated comments.
+ * 
+ * -------------------------------- IMPORTANT ------------------------------------
+ * IDE Setup Instructions: (as of July 23, 2024 using v2.3.2)
+ * - Ensure you have the latest version of the Arduino IDE installed.
+ * - Select the correct board and port:
+ *   - Board: Arduino Duemilanove or Diecimila 
+ *   - Port: Select the appropriate COM port
+ *     - On Windows: Select the appropriate COM port (e.g., COM3, COM4, etc.)
+ *     - On macOS: Select the appropriate port (e.g., /dev/tty.usbmodemxxxxx or /dev/cu.usbserial-xxxxx)
+ * - Select the correct processor (CRUCIAL)
+ *   - Select ATmega168 (Due to the age of the Arduino)
+ * - Compile and upload the code to the Arduino board.
  */
 
 /* DEFINE YOUR BOTANICAL PREFERENCES */
@@ -45,7 +60,7 @@
 //to how long to keep the water running. also select how many total samples you
 //would like to collect to determine moisture levels every time the system checks
 
-#define MOIST_CHECK_INTERVAL 10000   // milliseconds (1 minutes) in between checks
+#define MOIST_CHECK_INTERVAL 20000   // milliseconds (1 minutes) in between checks
 //#define MOIST_CHECK_INTERVAL 3600000 // milliseconds (1 hour) in between checks
 #define MOIST_SAMPLE_INTERVAL 2000   // milliseconds over which to average reading samples
 //#define MOIST_SAMPLE_INTERVAL 5000 // milliseconds over which to average reading samples
@@ -82,6 +97,14 @@ boolean needServicing = false;   // set if there is a faulty probe
 boolean wateredLast = false;
 /* HELPER METHODS */
 
+
+/**
+ * @brief Resets all plant status LEDs to the OFF state.
+ *
+ * This function turns off the dry, moist, and soaked LEDs to indicate that no
+ * specific condition is currently being met. It helps in resetting the LED status
+ * before making new checks or taking actions.
+ */
 void resetLeds(){
   //turn off all plant status leds
   digitalWrite(dryLed,     LOW);
@@ -89,35 +112,79 @@ void resetLeds(){
   digitalWrite(soakedLed,  LOW);
 }
 
-void selectionSort(){
-  //sorts moistValues array using selection sort
+/**
+ * @brief Sorts an array using the Insertion Sort algorithm.
+ *
+ * This function implements the Insertion Sort algorithm, which is efficient for
+ * small arrays. It sorts the array in-place by building the sorted array one element
+ * at a time, picking the next element and placing it at the correct position. Also space
+ * complexity of O(1).
+ * *
+ * @note This function has a time complexity of O(n^2) in the worst case but performs well
+ *       for small arrays.
+ * @note (Ricardo Hernandez) Added this function to improve performance and readability for small datasets.
+ */
+void insertionSort() {
+  for (int i = 1; i < MOIST_SAMPLES; i++) {
+    int key = moistValues[i];
+    int j = i - 1;
+    
 
-  int indexOfMin;  //vars
-  int pass;        //-
-  int j;           //-
-
-  //perform selection sort
-  for ( pass = 0; pass < MOIST_SAMPLES - 1; pass++ ) { 
-    indexOfMin = pass; 
-
-    for ( j = pass + 1; j < MOIST_SAMPLES; j++ ) 
-      if ( moistValues[j] < moistValues[pass] ) 
-        indexOfMin = j; 
-
-    int temp; 
-    temp = moistValues[pass]; 
-    moistValues[pass] = moistValues[indexOfMin]; 
-    moistValues[indexOfMin] = temp; 
+    // Move elements of arr[0..i-1], that are greater than key,
+    // to one position ahead of their current position
+    while (j >= 0 && moistValues[j] > key) {
+      moistValues[j + 1] = moistValues[j];
+      j = j - 1;
+    }
+    moistValues[j + 1] = key;
   }
- 
-  Serial.print("sorted readings: ");
-  for(int i=0; i<MOIST_SAMPLES; i++){
+
+  // Print the sorted array
+  Serial.print("sorted readings at end of insertionSort: ");
+  for (int i = 0; i < MOIST_SAMPLES; i++) {
     Serial.print(moistValues[i]);
     Serial.print(" ");
   }
-  Serial.println(""); 
+  Serial.println("");
 }
 
+// void selectionSort(){
+//   //sorts moistValues array using selection sort
+
+//   int indexOfMin;  //vars
+//   int pass;        //-
+//   int j;           //-
+
+//   //perform selection sort
+//   for ( pass = 0; pass < MOIST_SAMPLES - 1; pass++ ) { 
+//     indexOfMin = pass; 
+
+//     for ( j = pass + 1; j < MOIST_SAMPLES; j++ ) 
+//       if ( moistValues[j] < moistValues[pass] ) 
+//         indexOfMin = j; 
+
+//     int temp; 
+//     temp = moistValues[pass]; 
+//     moistValues[pass] = moistValues[indexOfMin]; 
+//     moistValues[indexOfMin] = temp; 
+//   }
+ 
+//   Serial.print("sorted readings: ");
+//   for(int i=0; i<MOIST_SAMPLES; i++){
+//     Serial.print(moistValues[i]);
+//     Serial.print(" ");
+//   }
+//   Serial.println(""); 
+// }
+
+/**
+ * @brief Collects and processes moisture readings from the probe.
+ *
+ * This function collects multiple moisture readings, averages them, and determines
+ * the plant's watering status based on the median value. It also sorts the readings
+ * to compute the median value, which is used to make decisions on whether to water the plant.
+ * The function then updates the status LEDs and calls the `waterPlant` function if necessary.
+ */
 void checkMoisture(){
   //collects 10 readings, averages them and 
   //determines an action depending on the result
@@ -164,7 +231,7 @@ void checkMoisture(){
   Serial.print(lastMoistAvg);
    */
   
-  selectionSort();                    //sort results in array
+  insertionSort();                    //sort results in array
   oldlastMoistAvg = lastMoistAvg;     //store old last moist value
   lastMoistAvg = (moistValues[(MOIST_SAMPLES/2)-1]); //pick median value
   Serial.print("median read: ");      //serial output
@@ -202,6 +269,14 @@ void checkMoisture(){
   Serial.println("");
 }
 
+/**
+ * @brief Manages the watering of the plant.
+ *
+ * This function activates the relay to turn on the pump and dispense water to the plant.
+ * It includes a failsafe check to ensure that the watering process was effective.
+ * If the difference in moisture levels before and after watering is below a threshold,
+ * it triggers an alert for servicing.
+ */
 void waterPlant(){
   //opens a 5V line to feed a relay
   //that will power up a pump to dispense water
@@ -254,18 +329,29 @@ void waterPlant(){
 }
 
 /* arduino methods */
+/**
+ * @brief Initializes the Arduino board and sets up the initial state.
+ *
+ * This function configures the pins for the LEDs, power, relay, and probe as outputs.
+ * It also turns on the power LED and initializes serial communication for debugging.
+ */
 void setup()                    // run once, when the sketch starts
 {
-  //set all led pins, power & relay pins
-  //as outputs
-  pinMode(onLed,      OUTPUT);  
-  pinMode(readLed,    OUTPUT);  
-  pinMode(workLed,    OUTPUT);  
-  pinMode(dryLed,     OUTPUT);  
-  pinMode(moistLed,   OUTPUT);  
-  pinMode(soakedLed,  OUTPUT);  
-  pinMode(powerPin,   OUTPUT);
-  pinMode(relayPin,   OUTPUT);  
+  // //set all led pins, power & relay pins
+  // //as outputs
+  // pinMode(onLed,      OUTPUT);  
+  // pinMode(readLed,    OUTPUT);  
+  // pinMode(workLed,    OUTPUT);  
+  // pinMode(dryLed,     OUTPUT);  
+  // pinMode(moistLed,   OUTPUT);  
+  // pinMode(soakedLed,  OUTPUT);  
+  // pinMode(powerPin,   OUTPUT);
+  // pinMode(relayPin,   OUTPUT);  
+
+  // Set all pins as outputs. Original way commented out above.
+  for (int pin : {onLed, readLed, workLed, dryLed, moistLed, soakedLed, powerPin, relayPin}) {
+    pinMode(pin, OUTPUT);
+  }
 
   digitalWrite(onLed, HIGH);    // turns on power light
   Serial.begin(9600);           // open serial communications at 9600 bps  
@@ -273,6 +359,13 @@ void setup()                    // run once, when the sketch starts
   Serial.println("");
 }
 
+/**
+ * @brief Main loop for the Arduino program.
+ *
+ * This function repeatedly checks the moisture levels at a specified interval
+ * and performs actions based on the readings. It includes a delay between checks
+ * to control the frequency of moisture monitoring.
+ */
 void loop()                     // run over and over again
 {
     //make a moisture check
