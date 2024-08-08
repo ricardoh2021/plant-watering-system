@@ -29,6 +29,12 @@
 ![My Project Setup](images/Calibrated_Readings.jpg)
 ![My Project Setup](images/load_cell_scale.jpeg)
 
+## Following Steps:
+
+- Create a 3D Printed Case: Design and print a case to hold the scale in place, including a section to securely hold the water pitcher.
+- Add LED Indicators: Integrate LED lights that will be triggered when the water level in the pitcher is too low.
+- Code Integration: Merge this code with the existing water.ino file and integrate the wiring with the current Arduino setup to fully automate the plant watering system.
+
 ## Code:
 
 ```cpp
