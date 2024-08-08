@@ -4,7 +4,7 @@
 
 ## Equipment Used:
 
-- **10kg Load Cell**
+- **10kg Load Cell** (Bought from [Amazon](https://www.amazon.com/Geekstory-Converter-Breakout-Electronic-Raspberry/dp/B0D293F1CW/ref=sr_1_7?dib=eyJ2IjoiMSJ9.xMiUE1Rd8vlV0k9aypBFjV0GjQhqL6JNI2v42oVwuet-1SapgyaG0Ef3RWRygIStQCt_bIhpVcTHpBoPH0DNbPaR2Y2-bmRhOVF4Vnhilp8JpKV1sFkPxoPwpWWAj88V8Ker2IQxpb8-drf2bHJtTRU-sXQ_BM2O497v_wNUOomct8WWPUE9hhTYcyJaMubC4KmDUvVb3yeOENCgeYvW1B1qr24kHXeMh5SN23i2vHwXeh4Od3QNuKjDnYp_MtRFLR5DTMuB0L7VvJ_cyHqHHeWTVAaYN0JiFdGP3qdo2Nc.IqNRgbxsf4vnhM7I2L9D1Rx57QExCoqX8B64RomgJcc&dib_tag=se&keywords=arduino+scale&qid=1722549473&sr=8-7))
 - **HX711 Load Cell Amplifier**
 - **Arduino Diecimila (ATmega168)**
 - **Soldering Iron and Solder**
@@ -22,6 +22,10 @@
   - Decided to solder the wires together for a better connection.
 - Played around with the calibration number to correct the scale readings.
 
+![My Project Setup](images/assembled_load_cell.jpeg)
+![My Project Setup](images/soldered_wires.jpeg)
+![My Project Setup](images/scaled_with_water.jpg)
+![My Project Setup](images/Calibrated_Readings.jpg)
 ![My Project Setup](images/load_cell_scale.jpeg)
 
 ## Code:
