@@ -14,6 +14,7 @@
 
 ## Work Done:
 
+- Followed this video to ensure setup was smooth as possible. [Tutorial](https://www.youtube.com/watch?v=sxzoAGf1kOo&t=356s)
 - Set up the 10kg load cell with the HX711 Load Cell Amplifier connected to Arduino Diecimila (ATmega168).
 - Soldered pins onto the HX711 to extend the wires for better connection.
 - Tested the resistance between the wires to ensure that the sensors were being read correctly.
