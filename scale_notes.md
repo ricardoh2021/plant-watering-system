@@ -1,18 +1,30 @@
-# Work Log - Setting Up the 10kg Load Cell for Water Level Measurement
+# Work Log: Setting Up 10kg Load Cell for Plant Watering System
 
 ## Date: August 8, 2024
 
-### Task Summary:
+## Equipment Used:
 
-- **Set up the 10kg load cell** with the HX711 Load Cell Amplifier connected to the Arduino Diecimila (ATmega168).
-- **Soldered pins onto the HX711** to extend the wires and improve connection stability.
-- **Tested the resistance** between the load cell wires to ensure the sensors were being read correctly.
-  - Faced issues with incorrect readings, specifically not detecting any resistance.
-  - Troubleshot the issue and found the problem to be poor connection between the wire and the female Dupont connector.
-  - **Solution:** Soldered the wires together to ensure a solid connection.
-- **Calibrated the scale** by adjusting the calibration number to obtain accurate weight readings.
+- **10kg Load Cell**
+- **HX711 Load Cell Amplifier**
+- **Arduino Diecimila (ATmega168)**
+- **Soldering Iron and Solder**
+- **Female Dupont Connectors**
+- **Multimeter** (for testing resistance)
+- **Wires and Pins** (for extending connections)
 
-### Code Used:
+## Work Done:
+
+- Set up the 10kg load cell with the HX711 Load Cell Amplifier connected to Arduino Diecimila (ATmega168).
+- Soldered pins onto the HX711 to extend the wires for better connection.
+- Tested the resistance between the wires to ensure that the sensors were being read correctly.
+  - Had to troubleshoot readings that were extremely off and not detecting any resistance.
+  - Narrowed it down to the wiring not connecting well between the wire and the female Dupont connector.
+  - Decided to solder the wires together for a better connection.
+- Played around with the calibration number to correct the scale readings.
+
+![My Project Setup](images/load_cell_scale.jpeg)
+
+## Code:
 
 ```cpp
 #include "HX711.h"
