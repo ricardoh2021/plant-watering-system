@@ -22,6 +22,7 @@
   - Narrowed it down to the wiring not connecting well between the wire and the female Dupont connector.
   - Decided to solder the wires together for a better connection.
 - Played around with the calibration number to correct the scale readings.
+- Conducted troubleshooting for an issue with the water pump, which was not receiving power. Identified that two cables inside the enclosure were loose. Specifically, Pin 9 was not connected to the A1 Coil pin, and the black GND pin was not connected to the A2 Coil pin. After reconnecting the cables appropriately, verified functionality by testing the system on several dry plants around the house. The water pump performed as expected, confirming that the issue was resolved.
 
 ![My Project Setup](images/assembled_load_cell.jpeg)
 ![My Project Setup](images/soldered_wires.jpeg)
@@ -34,6 +35,7 @@
 - Create a 3D Printed Case: Design and print a case to hold the scale in place, including a section to securely hold the water pitcher.
 - Add LED Indicators: Integrate LED lights that will be triggered when the water level in the pitcher is too low.
 - Code Integration: Merge this code with the existing water.ino file and integrate the wiring with the current Arduino setup to fully automate the plant watering system.
+- Create diagrams of the wiring for future students to use. I have to make sure that I write good documentation.
 
 ## Code:
 
