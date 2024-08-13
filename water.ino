@@ -2,340 +2,277 @@
  * Application: Water 1.0
  * Author: Leo Marte
  *
- * Sets up a system to water a plant, by using sensors to probe water moisture
- * and opening a pump (via a relay) to water the plant when needed. Combination
- * of Botanicalls and Growduino project concepts.
- *
- * http://cs.gettysburg.edu/~martle02/cs450/
- *
- * Changelog:
- * - 2024-07-22: (Ricardo Hernandez) Optimized and refactored code for better readability and performance. Updated comments.
- * 
- * -------------------------------- IMPORTANT ------------------------------------
- * IDE Setup Instructions: (as of July 23, 2024 using v2.3.2)
- * - Ensure you have the latest version of the Arduino IDE installed.
- * - Select the correct board and port:
- *   - Board: Arduino Duemilanove or Diecimila 
- *   - Port: Select the appropriate COM port
- *     - On Windows: Select the appropriate COM port (e.g., COM3, COM4, etc.)
- *     - On macOS: Select the appropriate port (e.g., /dev/tty.usbmodemxxxxx or /dev/cu.usbserial-xxxxx)
- * - Select the correct processor (CRUCIAL)
- *   - Select ATmega168 (Due to the age of the Arduino)
- * - Compile and upload the code to the Arduino board.
+ * Sets up a system to water a plant, using sensors to probe water moisture
+ * and opening a pump (via a relay) to water the plant when needed.
  */
 
-/* DEFINE YOUR BOTANICAL PREFERENCES */
+#include "HX711.h"
+#include <EEPROM.h> // Include EEPROM library for storing the zero factor
 
-//the botanicalls project defines by default
-//the following threshold for your plant:
-//#define MOIST 425             // minimum level of satisfactory moisture
-//#define DRY 300               // maximum level of tolerable dryness      
-//#define SOAKED 575            // minimum desired level after watering
-//#define WATERING_CRITERIA 125 // minimum change in value that indicates watering
+#define DRY 420
+#define MOIST 710
+#define SOAKED 1000
+#define FAILSAFE_VALUE 200
 
-//I used the previous thresholds as a starting point
-//to determine new ones for my pathos plant. below are the results:
-#define DRY 420               // after not being watered for ~5 days
-#define MOIST 710             // midpoint between DRY and SOAKED
-#define SOAKED 1000           // least desired level after watering
-
-//in order to figure out the bottom-line, or the DRY value, I left the pathos
-//without water for about 5 days until the surface was completely dry, and the
-//leaves started to get yellow (i know its cruel). At that point the reading
-//was 420 on the analog input. I then poured a cup of water on it, and the
-//reading value went up to about a 1000. I called that value my SOAKED value
-//since I wouldn't want my plant to be more watered than that. Finally,
-//I considered MOIST to be the midpoint between being too dry and soaked.
-//Below is an example of my rationale:
-
-//variation:
-//1 cup of water -> 1000 (sensor reading) @ 7.30pm on 12/9/2008
-//criteria of cup of water is: ~600 (reading increases by that amount)
-//  if 1000 is SOAKED, then the midpoint between 420 and 1000: 710 is MOIST
-
-/* DEFINE CONSTANTS */
-
-//define here how often you would like things to happen, from moisture check
-//frequency, to what do you want it to be the interval between reads to average,
-//to how long to keep the water running. also select how many total samples you
-//would like to collect to determine moisture levels every time the system checks
-
-#define MOIST_CHECK_INTERVAL 20000   // milliseconds (2 minutes) in between checks
-//#define MOIST_CHECK_INTERVAL 3600000 // milliseconds (1 hour) in between checks
-#define MOIST_SAMPLE_INTERVAL 2000   // milliseconds over which to average reading samples
-//#define MOIST_SAMPLE_INTERVAL 5000 // milliseconds over which to average reading samples
-
+#define MOIST_CHECK_INTERVAL 10000   // milliseconds (10 seconds) between checks
+#define MOIST_SAMPLE_INTERVAL 2000   // milliseconds over which to average readings
 #define WATER_INTERVAL 3000          // milliseconds to allow for water to flow
-// this value will change according to the kind of pump
-// that you will use. some pumps will need more time
-// to get  the water to the plant than the default 3 seconds.
+#define MOIST_SAMPLES 10             // Number of samples to average
 
-#define MOIST_SAMPLES 10             // # of samples to average when reading moisture
-#define FAILSAFE_VALUE 200           // minimum difference in moisture that indicates watering has happened
+// LED and pin definitions
+#define onLed 2
+#define readLed 3
+#define workLed 4
+#define dryLed 5
+#define moistLed 6
+#define soakedLed 7
 
-/* PROGRAM VARIABLES AND BOARD PINS */
+#define powerPin 8
+#define relayPin 9
+#define probePin A0
 
-//LEDs               //light up when:
-#define onLed 2      //device is on
-#define readLed 3    //device is reading
-#define workLed 4    //device is watering
-#define dryLed 5     //plant is anywhere below MOIST
-#define moistLed 6   //plant is equal or higher than MOIST and less than SOAKED
-#define soakedLed 7  //plant is equal or higher than SOAKED
+int moistValues[MOIST_SAMPLES];
+unsigned long lastMoistTime = 0;
+unsigned long lastWaterTime = 0;
+int lastMoistAvg = 0;
+int oldlastMoistAvg = 0;
+bool needServicing = false;
+bool wateredLast = false;
 
-//probes
-#define powerPin 8 //sends current to plant
-#define relayPin 9 //send current to activate relay
-#define probePin 0 //analog 0: collects current from plant
+// Pin definitions for the HX711 module
+const int LOADCELL_DOUT_PIN = A4;  // Pin connected to DOUT of HX711 (Analog pin A4)
+const int LOADCELL_SCK_PIN = A5;   // Pin connected to SCK of HX711 (Analog pin A5)
+// Pin definitions for the RGB LED
+const int RED_PIN = 10;    // Pin connected to the red leg of the LED
+const int GREEN_PIN = 11;  // Pin connected to the green leg of the LED
+const int BLUE_PIN = 12;   // Pin connected to the blue leg of the LED
 
-int moistValues[MOIST_SAMPLES];  // array to store readings to average
-unsigned long lastMoistTime=0;   // storage for millis of the most recent moisture reading
-unsigned long lastWaterTime=0;   // storage for millis of the most recent watering reading
-int lastMoistAvg=0;              // storage for moisture average of the most recent moisture reading
-int oldlastMoistAvg=0;           // temp var for failsafe test
-boolean needServicing = false;   // set if there is a faulty probe
-boolean wateredLast = false;
+// EEPROM memory address for storing the zero factor
+const int EEPROM_ADDRESS = 0;
+
+// Weight thresholds (in lbs)
+const float EMPTY_WEIGHT_THRESHOLD = 1.55;
+const float LOW_WEIGHT_THRESHOLD = 3.15;
+const float SUFFICIENT_WEIGHT_THRESHOLD = 3.75;
+
+// Calibration factor for scaling the raw data to weight units
+const float CALIBRATION_FACTOR = -94500; // Adjust this value to match your scale setup
+
+HX711 scale;  // Create an instance of the HX711 class
+
 /* HELPER METHODS */
 
-
 /**
- * @brief Resets all plant status LEDs to the OFF state.
- *
- * This function turns off the dry, moist, and soaked LEDs to indicate that no
- * specific condition is currently being met. It helps in resetting the LED status
- * before making new checks or taking actions.
+ * @brief Set the color of the RGB LED using RGB values.
+ * 
+ * @param R Red component (0-255).
+ * @param G Green component (0-255).
+ * @param B Blue component (0-255).
  */
-void resetLeds(){
-  //turn off all plant status leds
-  digitalWrite(dryLed,     LOW);
-  digitalWrite(moistLed,   LOW);
-  digitalWrite(soakedLed,  LOW);
+void setColor(int R, int G, int B) {
+  analogWrite(RED_PIN, R);
+  analogWrite(GREEN_PIN, G);
+  analogWrite(BLUE_PIN, B);
 }
 
 /**
- * @brief Sorts an array using the Insertion Sort algorithm.
- *
- * This function implements the Insertion Sort algorithm, which is efficient for
- * small arrays. It sorts the array in-place by building the sorted array one element
- * at a time, picking the next element and placing it at the correct position. Also space
- * complexity of O(1).
- * *
- * @note This function has a time complexity of O(n^2) in the worst case but performs well
- *       for small arrays.
- * @note (Ricardo Hernandez) Added this function to improve performance and readability for small datasets.
+ * @brief Function to blink the red LED.
  */
-void insertionSort() {
-  for (int i = 1; i < MOIST_SAMPLES; i++) {
-    int key = moistValues[i];
-    int j = i - 1;
-    
+void blinkRed() {
+  setColor(255, 0, 0); // Red
+  delay(500);  // Wait 500 ms
+  setColor(0, 0, 0); // Turn off the LED
+  delay(500);  // Wait 500 ms
+}
 
-    // Move elements of arr[0..i-1], that are greater than key,
-    // to one position ahead of their current position
-    while (j >= 0 && moistValues[j] > key) {
-      moistValues[j + 1] = moistValues[j];
-      j = j - 1;
+void resetLeds() {
+  digitalWrite(dryLed, LOW);
+  digitalWrite(moistLed, LOW);
+  digitalWrite(soakedLed, LOW);
+}
+
+int getMedian(int arr[], int size) {
+  int temp;
+  // Copy and sort the array
+  int sortedArr[size];
+  memcpy(sortedArr, arr, size * sizeof(int));
+  
+  // Simple selection sort for small array
+  for (int i = 0; i < size - 1; i++) {
+    for (int j = i + 1; j < size; j++) {
+      if (sortedArr[j] < sortedArr[i]) {
+        temp = sortedArr[i];
+        sortedArr[i] = sortedArr[j];
+        sortedArr[j] = temp;
+      }
     }
-    moistValues[j + 1] = key;
   }
-
-  // Print the sorted array
-  Serial.print("sorted readings at end of insertionSort: ");
-  for (int i = 0; i < MOIST_SAMPLES; i++) {
-    Serial.print(moistValues[i]);
-    Serial.print(" ");
-  }
-  Serial.println("");
+  return sortedArr[size / 2]; // Return median
 }
 
-/**
- * @brief Collects and processes moisture readings from the probe.
- *
- * This function collects multiple moisture readings, averages them, and determines
- * the plant's watering status based on the median value. It also sorts the readings
- * to compute the median value, which is used to make decisions on whether to water the plant.
- * The function then updates the status LEDs and calls the `waterPlant` function if necessary.
- */
-void checkMoisture(){
-  //collects 10 readings, averages them and 
-  //determines an action depending on the result
+void checkMoisture() {
   Serial.print("started reading at ");
   Serial.println(millis());
-  digitalWrite(readLed, HIGH);         // sets the reading led on
+  digitalWrite(readLed, HIGH);
 
-  for(int i=0; i<MOIST_SAMPLES+1; i++){
-    //perform reading  
-    digitalWrite(powerPin, HIGH);      // sets the POWER on
-    int val = analogRead(probePin);    // get probe reading 
-    digitalWrite(powerPin, LOW);       // sets POWER off  
-
-
-    //always discard first reading
-    //probe will always return bogus value on first try
-    if(i!=0){
-      //otherwise, store data
-      //and print data to serial port
-      moistValues[i-1] = val;          // store values
-      lastMoistTime = millis();          
-      
-      /*Serial.print("read #");          // print to serial
-      Serial.print(i);
-      Serial.print(" ");
-      Serial.print("time: ");
-      Serial.print(lastMoistTime);
-      Serial.print(" ");
-      Serial.print("read: ");
-      Serial.println(val);*/
-    }
-
-    delay(MOIST_SAMPLE_INTERVAL); // wait to collect next reading
-  }  
-
-  
-  //average all readings -- AVERAGE DEPRECATED
-  /*int totalRead = 0;
-  for(int i=0; i<MOIST_SAMPLES; i++){ 
-   totalRead += moistValues[i]; 
+  // Collect readings
+  for (int i = 0; i < MOIST_SAMPLES; i++) {
+    digitalWrite(powerPin, HIGH);
+    moistValues[i] = analogRead(probePin);
+    digitalWrite(powerPin, LOW);
+    delay(MOIST_SAMPLE_INTERVAL);
   }
-  lastMoistAvg = totalRead/MOIST_SAMPLES;
-  Serial.print("average read: ");
+
+  lastMoistTime = millis();
+  
+  // Calculate median
+  oldlastMoistAvg = lastMoistAvg;
+  lastMoistAvg = getMedian(moistValues, MOIST_SAMPLES);
+  
+  Serial.print("median read: ");
   Serial.print(lastMoistAvg);
-   */
-  
-  insertionSort();                    //sort results in array
-  oldlastMoistAvg = lastMoistAvg;     //store old last moist value
-  lastMoistAvg = (moistValues[(MOIST_SAMPLES/2)-1]); //pick median value
-  Serial.print("median read: ");      //serial output
-  Serial.print(lastMoistAvg);  
-  Serial.print(" | ");
-  
-  
-  //otherwise, test against thresholds
-  //and if necessary perform watering  
+  Serial.println("");
+
   resetLeds();
-  if(lastMoistAvg <= DRY){
-    Serial.println(" status: VERY DRY - watering plant");
-    digitalWrite(dryLed, HIGH);     //turn on dry led
-    waterPlant();                   //do watering
+  if (lastMoistAvg <= DRY) {
+    Serial.println("status: VERY DRY - watering plant");
+    digitalWrite(dryLed, HIGH);
+    waterPlant();
     wateredLast = true;
-  }
-  else if(lastMoistAvg > DRY && lastMoistAvg < MOIST){
-    Serial.println(" status: DRY - watering plant");
-    digitalWrite(dryLed, HIGH);     //turn on dry led
-    waterPlant();                   //do watering
+  } else if (lastMoistAvg > DRY && lastMoistAvg < MOIST) {
+    Serial.println("status: DRY - watering plant");
+    digitalWrite(dryLed, HIGH);
+    waterPlant();
     wateredLast = true;
-  }
-  else if(lastMoistAvg >= MOIST && lastMoistAvg < SOAKED){
-    Serial.println(" status: MOIST - plant is just fine");
-    digitalWrite(moistLed, HIGH);   //turn on moist led
+  } else if (lastMoistAvg >= MOIST && lastMoistAvg < SOAKED) {
+    Serial.println("status: MOIST - plant is just fine");
+    digitalWrite(moistLed, HIGH);
     wateredLast = false;
-  }
-  else if(lastMoistAvg > SOAKED){
-    Serial.println(" status: SOAKED - don't water plant!");
-    digitalWrite(soakedLed, HIGH);  //turn on soaked led
+  } else if (lastMoistAvg > SOAKED) {
+    Serial.println("status: SOAKED - don't water plant!");
+    digitalWrite(soakedLed, HIGH);
     wateredLast = false;
   }
 
-  digitalWrite(readLed, LOW);       // sets the reading led off    
+  digitalWrite(readLed, LOW);
   Serial.println("");
 }
 
-/**
- * @brief Manages the watering of the plant.
- *
- * This function activates the relay to turn on the pump and dispense water to the plant.
- * It includes a failsafe check to ensure that the watering process was effective.
- * If the difference in moisture levels before and after watering is below a threshold,
- * it triggers an alert for servicing.
- */
-void waterPlant(){
-  //opens a 5V line to feed a relay
-  //that will power up a pump to dispense water
-  //on the plant
-
-    //do a test for failsafe
-  //if the difference between the most recent median
-  //reading, and the one before is less than the given
-  //FAILSAFE_VALUE then raise the service flag
+void waterPlant() {
   int diffMoist = lastMoistAvg - oldlastMoistAvg;
-  //Serial.print("diffMoist: ");
-  //Serial.println(diffMoist);
-  
-  if( wateredLast && diffMoist <= FAILSAFE_VALUE ){
+
+  if (wateredLast && diffMoist <= FAILSAFE_VALUE) {
     needServicing = true;
-    Serial.println("");
     Serial.println("water 1.0 is suspending execution...");
     Serial.println("EQUIPMENT NEEDS SERVICING!");
     resetLeds();
     digitalWrite(readLed, LOW);
-    //for(int i=0; i < 1000; i++){
-    while(true){
-      //if sensor has issue, flash onLed
-      digitalWrite(onLed, LOW); 
-      delay(1000);      
+    while (true) {
+      digitalWrite(onLed, LOW);
+      delay(1000);
       digitalWrite(onLed, HIGH);
-      delay(1000);  
+      delay(1000);
     }
-  }
-  else{
-    //output info to serial
+  } else {
     Serial.print("watering started at: ");
     Serial.print(millis());
-    digitalWrite(workLed, HIGH); //light on working led
+    digitalWrite(workLed, HIGH);
 
-    //open relay, delay and close
     digitalWrite(relayPin, HIGH);
     delay(WATER_INTERVAL);
-    digitalWrite(relayPin, LOW);  //COMMENTED ONLY WHEN THERE IS NO RELAY ATTACHED
+    digitalWrite(relayPin, LOW);
 
-    //output info to serial
-    digitalWrite(workLed, LOW);     //output info to serial
+    digitalWrite(workLed, LOW);
     Serial.print(", it lasted: ");
     Serial.print(WATER_INTERVAL);
-    Serial.print(" seconds");
-    Serial.println("");
-    
+    Serial.println(" milliseconds");
+
     wateredLast = true;
   }
 }
 
-/* arduino methods */
-/**
- * @brief Initializes the Arduino board and sets up the initial state.
- *
- * This function configures the pins for the LEDs, power, relay, and probe as outputs.
- * It also turns on the power LED and initializes serial communication for debugging.
- */
-void setup()                    // run once, when the sketch starts
-{
-  // Set all pins as outputs.
-  for (int pin : {onLed, readLed, workLed, dryLed, moistLed, soakedLed, powerPin, relayPin}) {
-    pinMode(pin, OUTPUT);
-  }
+void setup() {
+  pinMode(onLed, OUTPUT);
+  pinMode(readLed, OUTPUT);
+  pinMode(workLed, OUTPUT);
+  pinMode(dryLed, OUTPUT);
+  pinMode(moistLed, OUTPUT);
+  pinMode(soakedLed, OUTPUT);
+  pinMode(powerPin, OUTPUT);
+  pinMode(relayPin, OUTPUT);
 
-  digitalWrite(onLed, HIGH);    // turns on power light
-  Serial.begin(9600);           // open serial communications at 9600 bps  
+  digitalWrite(onLed, HIGH);
+  Serial.begin(9600);
   Serial.println("water 1.0 up and running...");
-  Serial.println("");
+
+  Serial.println("HX711 calibration sketch");
+  Serial.println("Remove all weight from scale");
+  Serial.println("After readings begin, place known weight on scale");
+  
+  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);  // Initialize the HX711 module
+  scale.set_scale();  // Set the scale to the default calibration factor
+
+  // Load zero factor from EEPROM
+  long zero_factor;
+  EEPROM.get(EEPROM_ADDRESS, zero_factor);  // Retrieve stored zero factor from EEPROM
+  if (zero_factor == 0xFFFFFFFF) {  // Check if no valid zero factor is found in EEPROM
+    Serial.println("No zero factor found in EEPROM. Please tare the scale manually.");
+    scale.tare();  // Manually tare the scale (reset to 0)
+    zero_factor = scale.read_average();  // Get a baseline reading for the zero factor
+    EEPROM.put(EEPROM_ADDRESS, zero_factor);  // Save the new zero factor to EEPROM
+  } else {
+    scale.set_offset(zero_factor);  // Apply the stored zero factor to the scale
+    Serial.println("Zero factor loaded from EEPROM.");
+  }
+  
+  Serial.print("Zero factor: ");  // Display the loaded or newly set zero factor
+  Serial.println(zero_factor);
+
+  // Set the RGB pins as output
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
 }
 
-/**
- * @brief Main loop for the Arduino program.
- *
- * This function repeatedly checks the moisture levels at a specified interval
- * and performs actions based on the readings. It includes a delay between checks
- * to control the frequency of moisture monitoring.
- */
-void loop()                     // run over and over again
-{
-    //make a moisture check
-    checkMoisture();
+void loop() {
+  checkMoisture();
+  Serial.print("Delaying for ");
+  Serial.print(MOIST_CHECK_INTERVAL / 1000);
+  Serial.println(" seconds");
 
-    //output info to serial
-    Serial.print("delaying for ");
-    Serial.print(MOIST_CHECK_INTERVAL/1000);
-    Serial.println(" seconds");
-    Serial.println("");
-    
-    delay(MOIST_CHECK_INTERVAL);
+  scale.set_scale(CALIBRATION_FACTOR);  // Apply the current calibration factor
+
+  float weight = scale.get_units();  // Get the weight from the scale
+
+  // Print the weight reading and the current calibration factor to the serial monitor
+  Serial.print("Reading: ");
+  Serial.print(weight, 2);  // Display the weight with 2 decimal places
+  Serial.print(" lbs");
+  Serial.print(" Calibration Factor: ");
+  Serial.println(CALIBRATION_FACTOR);
+
+  // Set LED color based on weight conditions
+  if (weight < 1.55) {
+    setColor(255, 0, 0); // Solid red if weight is less than EMPTY_WEIGHT_THRESHOLD
+  } else if (weight >= 1.55 && weight < 3.15) {
+    setColor(255, 255, 0); // Yellow if weight is between EMPTY_WEIGHT_THRESHOLD and LOW_WEIGHT_THRESHOLD
+  } else if (weight >= 3.15 && weight < 3.75) {
+    setColor(0, 255, 0); // Green if weight is between LOW_WEIGHT_THRESHOLD and SUFFICIENT_WEIGHT_THRESHOLD
+  } else {
+    setColor(0, 255, 0); // Green if weight is SUFFICIENT_WEIGHT_THRESHOLD or more
+  }
+  
+  delay(MOIST_CHECK_INTERVAL);
 }
+
+// void testSetColor() {
+//   setColor(255, 0, 0); // Red
+//   delay(1000);
+//   setColor(0, 255, 0); // Green
+//   delay(1000);
+//   setColor(0, 0, 255); // Blue
+//   delay(1000);
+//   setColor(255, 255, 0); // Yellow
+//   delay(1000);
+// }
+
