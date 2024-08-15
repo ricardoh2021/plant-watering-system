@@ -2,16 +2,27 @@
 #include <EEPROM.h> // Include EEPROM library for storing the zero factor
 
 // Pin definitions for the HX711 module
-#define LOADCELL_DOUT_PIN  3  // Pin connected to DOUT of HX711
-#define LOADCELL_SCK_PIN   2  // Pin connected to SCK of HX711
+const int LOADCELL_DOUT_PIN = A4;  // Pin connected to DOUT of HX711 (Analog pin A4)
+const int LOADCELL_SCK_PIN = A5;   // Pin connected to SCK of HX711 (Analog pin A5)
+// Pin definitions for the RGB LED
+const int RED_PIN = 10;    // Pin connected to the red leg of the LED
+const int GREEN_PIN = 11;  // Pin connected to the green leg of the LED
+const int BLUE_PIN = 12;   // Pin connected to the blue leg of the LED
 
 // EEPROM memory address for storing the zero factor
-#define EEPROM_ADDRESS 0
+const int EEPROM_ADDRESS = 0;
 
-HX711 scale;  // Create an instance of the HX711 class
+// Weight thresholds (in lbs)
+const float EMPTY_WEIGHT_THRESHOLD = 1.50; // Under this is empty
+const float LOW_WEIGHT_THRESHOLD = 3.50;
+const float SUFFICIENT_WEIGHT_THRESHOLD = 4;
+// const float FULL_PITCHER = 7.85;
+
 
 // Calibration factor for scaling the raw data to weight units
-float calibration_factor = -93999; // Adjust this value to match your scale setup
+const float CALIBRATION_FACTOR = -94500; // Adjust this value to match your scale setup
+
+HX711 scale;  // Create an instance of the HX711 class
 
 /**
  * @brief Arduino setup function.
@@ -44,25 +55,98 @@ void setup() {
   
   Serial.print("Zero factor: ");  // Display the loaded or newly set zero factor
   Serial.println(zero_factor);
+
+  // Set the RGB pins as output
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
+
+  setColor(137, 207, 240); // Initial color (baby blue)
+}
+
+/**
+ * @brief Set the color of the RGB LED using RGB values.
+ * 
+ * @param R Red component (0-255).
+ * @param G Green component (0-255).
+ * @param B Blue component (0-255).
+ */
+void setColor(int R, int G, int B) {
+  analogWrite(RED_PIN, R);
+  analogWrite(GREEN_PIN, G);
+  analogWrite(BLUE_PIN, B);
+}
+
+/**
+ * @brief Function to blink the red LED.
+ */
+void blinkRed() {
+  setColor(255, 0, 0); // Red
+  delay(500);  // Wait 500 ms
+  setColor(0, 0, 0); // Turn off the LED
+  delay(500);  // Wait 500 ms
 }
 
 /**
  * @brief Arduino main loop function.
  * 
  * Continuously reads the weight from the scale, applies the calibration factor, 
- * and prints the results to the serial monitor. The calibration factor can be adjusted
- * through the serial interface.
+ * and prints the results to the serial monitor. Additionally, changes the LED color
+ * based on the weight.
  */
 void loop() {
-  scale.set_scale(calibration_factor);  // Apply the current calibration factor
+  scale.set_scale(CALIBRATION_FACTOR);  // Apply the current calibration factor
+
+  float weight = scale.get_units();  // Get the weight from the scale
 
   // Print the weight reading and the current calibration factor to the serial monitor
   Serial.print("Reading: ");
-  Serial.print(scale.get_units(), 2);  // Display the weight with 2 decimal places
-  Serial.print(" lbs");  // Display the units (lbs by default)
+  Serial.print(weight, 2);  // Display the weight with 2 decimal places
+  Serial.print(" lbs");
   Serial.print(" calibration_factor: ");
-  Serial.print(calibration_factor);
+  Serial.print(CALIBRATION_FACTOR);
   Serial.println();
+
+  // Set LED color based on weight conditions
+  if (weight < EMPTY_WEIGHT_THRESHOLD) {
+    Serial.println("Water pitcher is empty");
+    blinkRed();  // Blink red LED if weight is less than 1.55 lbs
+
+  } else if (weight >= EMPTY_WEIGHT_THRESHOLD && weight < LOW_WEIGHT_THRESHOLD) {
+    Serial.println("Water pitcher is getting low");
+    setColor(255, 0, 0); // Solid red if weight is between 1.55 and 3.15 lbs
+  } else if (weight >= LOW_WEIGHT_THRESHOLD && weight < SUFFICIENT_WEIGHT_THRESHOLD) {
+    Serial.println("Water pitcher has sufficient weight");
+    setColor(255, 255, 0); // Yellow if weight is between 3.15 and 3.75 lbs
+  } else {
+    Serial.println("Water pitcher is full");
+    setColor(0, 255, 0); // Green if weight is 3.75 lbs or more
+  }
+  
+  // Check for serial input to reset the zero factor
+  if (Serial.available() > 0) {
+    char input = Serial.read();  // Read the input character
+    if (input == 'z' || input == 'Z') {  // Check if the input is 'z' or 'Z'
+      scale.tare();  // Reset the scale to zero
+      long zero_factor = scale.read_average();  // Get the new zero factor
+      EEPROM.put(EEPROM_ADDRESS, zero_factor);  // Store the new zero factor in EEPROM
+      Serial.println("Zero factor reset and stored in EEPROM.");
+      Serial.print("New zero factor: ");
+      Serial.println(zero_factor);
+    }
+  }
 
   delay(1000);  // Delay for 1 second to allow stable readings
 }
+
+void testSetColor() {
+  setColor(255, 0, 0); // Red
+  delay(1000);
+  setColor(0, 255, 0); // Green
+  delay(1000);
+  setColor(0, 0, 255); // Blue
+  delay(1000);
+  setColor(255, 255, 0); // Yellow
+  delay(1000);
+}
+
