@@ -1,197 +1,183 @@
 /*
  * Application: Water 1.0
  * Author: Leo Marte
+ * Refactor: Ricardo Hernandez
  *
- * Sets up a system to water a plant, using sensors to probe water moisture
- * and opening a pump (via a relay) to water the plant when needed.
+ * Sets up a system to water a plant, by using sensors to probe water moisture
+ * and opening a pump (via a relay) to water the plant when needed. Combination
+ * of Botanicalls and Growduino project concepts.
+ *
+ * http://cs.gettysburg.edu/~martle02/cs450/
  */
 
-#include "HX711.h"
-#include <EEPROM.h> // Include EEPROM library for storing the zero factor
+/* DEFINE YOUR BOTANICAL PREFERENCES */
 
-#define DRY 420
-#define MOIST 710
-#define SOAKED 1000
-#define FAILSAFE_VALUE 200
+#define DRY 420               // after not being watered for ~5 days
+#define MOIST 710             // midpoint between DRY and SOAKED
+#define SOAKED 1000           // least desired level after watering
 
-#define MOIST_CHECK_INTERVAL 10000   // milliseconds (10 seconds) between checks
-#define MOIST_SAMPLE_INTERVAL 2000   // milliseconds over which to average readings
+/* DEFINE CONSTANTS */
+
+#define MOIST_CHECK_INTERVAL 10000   // milliseconds (1 minute) in between checks
+#define MOIST_SAMPLE_INTERVAL 2000   // milliseconds over which to average reading samples
 #define WATER_INTERVAL 3000          // milliseconds to allow for water to flow
-#define MOIST_SAMPLES 10             // Number of samples to average
+#define MOIST_SAMPLES 10             // # of samples to average when reading moisture
+#define FAILSAFE_VALUE 200           // minimum difference in moisture that indicates watering has happened
 
-// LED and pin definitions
-#define onLed 2
-#define readLed 3
-#define workLed 4
-#define dryLed 5
-#define moistLed 6
-#define soakedLed 7
+/* PROGRAM VARIABLES AND BOARD PINS */
 
-#define powerPin 8
-#define relayPin 9
-#define probePin A0
+//LEDs
+#define onLed 2      // device is on
+#define readLed 3    // device is reading
+#define workLed 4    // device is watering
+#define dryLed 5     // plant is anywhere below MOIST
+#define moistLed 6   // plant is equal or higher than MOIST and less than SOAKED
+#define soakedLed 7  // plant is equal or higher than SOAKED
 
-int moistValues[MOIST_SAMPLES];
-unsigned long lastMoistTime = 0;
-unsigned long lastWaterTime = 0;
-int lastMoistAvg = 0;
-int oldlastMoistAvg = 0;
-bool needServicing = false;
-bool wateredLast = false;
+//probes
+#define powerPin 8   // sends current to plant
+#define relayPin 9   // send current to activate relay
+#define probePin 0   // analog 0: collects current from plant
 
-// Pin definitions for the HX711 module
-const int LOADCELL_DOUT_PIN = A4;  // Pin connected to DOUT of HX711 (Analog pin A4)
-const int LOADCELL_SCK_PIN = A5;   // Pin connected to SCK of HX711 (Analog pin A5)
-// Pin definitions for the RGB LED
-const int RED_PIN = 10;    // Pin connected to the red leg of the LED
-const int GREEN_PIN = 11;  // Pin connected to the green leg of the LED
-const int BLUE_PIN = 12;   // Pin connected to the blue leg of the LED
-
-// EEPROM memory address for storing the zero factor
-const int EEPROM_ADDRESS = 0;
-
-// Weight thresholds (in lbs)
-const float EMPTY_WEIGHT_THRESHOLD = 1.55;
-const float LOW_WEIGHT_THRESHOLD = 3.15;
-const float SUFFICIENT_WEIGHT_THRESHOLD = 3.75;
-
-// Calibration factor for scaling the raw data to weight units
-const float CALIBRATION_FACTOR = -94500; // Adjust this value to match your scale setup
-
-HX711 scale;  // Create an instance of the HX711 class
+int moistValues[MOIST_SAMPLES];  // array to store readings to average
+unsigned long lastMoistTime = 0; // storage for millis of the most recent moisture reading
+unsigned long lastWaterTime = 0; // storage for millis of the most recent watering reading
+int lastMoistAvg = 0;            // storage for moisture average of the most recent moisture reading
+int oldlastMoistAvg = 0;         // temp var for failsafe test
+boolean needServicing = false;   // set if there is a faulty probe
+boolean wateredLast = false;
 
 /* HELPER METHODS */
 
-/**
- * @brief Set the color of the RGB LED using RGB values.
- * 
- * @param R Red component (0-255).
- * @param G Green component (0-255).
- * @param B Blue component (0-255).
- */
-void setColor(int R, int G, int B) {
-  analogWrite(RED_PIN, R);
-  analogWrite(GREEN_PIN, G);
-  analogWrite(BLUE_PIN, B);
-}
-
-/**
- * @brief Function to blink the red LED.
- */
-void blinkRed() {
-  setColor(255, 0, 0); // Red
-  delay(500);  // Wait 500 ms
-  setColor(0, 0, 0); // Turn off the LED
-  delay(500);  // Wait 500 ms
-}
-
 void resetLeds() {
+  // turn off all plant status leds
   digitalWrite(dryLed, LOW);
   digitalWrite(moistLed, LOW);
   digitalWrite(soakedLed, LOW);
 }
 
-int getMedian(int arr[], int size) {
-  int temp;
-  // Copy and sort the array
-  int sortedArr[size];
-  memcpy(sortedArr, arr, size * sizeof(int));
-  
-  // Simple selection sort for small array
-  for (int i = 0; i < size - 1; i++) {
-    for (int j = i + 1; j < size; j++) {
-      if (sortedArr[j] < sortedArr[i]) {
-        temp = sortedArr[i];
-        sortedArr[i] = sortedArr[j];
-        sortedArr[j] = temp;
-      }
+void insertionSort() {
+  // sorts moistValues array using insertion sort
+  for (int i = 1; i < MOIST_SAMPLES; i++) {
+    int key = moistValues[i];
+    int j = i - 1;
+
+    while (j >= 0 && moistValues[j] > key) {
+      moistValues[j + 1] = moistValues[j];
+      j--;
     }
+    moistValues[j + 1] = key;
   }
-  return sortedArr[size / 2]; // Return median
+
+  Serial.print("sorted readings: ");
+  for (int i = 0; i < MOIST_SAMPLES; i++) {
+    Serial.print(moistValues[i]);
+    Serial.print(" ");
+  }
+  Serial.println("");
 }
 
 void checkMoisture() {
+  // collects 10 readings, averages them, and determines an action depending on the result
   Serial.print("started reading at ");
   Serial.println(millis());
-  digitalWrite(readLed, HIGH);
+  digitalWrite(readLed, HIGH);  // sets the reading led on
 
-  // Collect readings
-  for (int i = 0; i < MOIST_SAMPLES; i++) {
-    digitalWrite(powerPin, HIGH);
-    moistValues[i] = analogRead(probePin);
-    digitalWrite(powerPin, LOW);
-    delay(MOIST_SAMPLE_INTERVAL);
+  for (int i = 0; i < MOIST_SAMPLES + 1; i++) {
+    // perform reading  
+    digitalWrite(powerPin, HIGH);      // sets the POWER on
+    int val = analogRead(probePin);    // get probe reading 
+    digitalWrite(powerPin, LOW);       // sets POWER off  
+
+    // always discard the first reading
+    if (i != 0) {
+      // store data
+      moistValues[i - 1] = val;  // store values
+      lastMoistTime = millis();
+    }
+
+    delay(MOIST_SAMPLE_INTERVAL); // wait to collect the next reading
   }
 
-  lastMoistTime = millis();
-  
-  // Calculate median
-  oldlastMoistAvg = lastMoistAvg;
-  lastMoistAvg = getMedian(moistValues, MOIST_SAMPLES);
-  
-  Serial.print("median read: ");
+  insertionSort();                   // sort results in array
+  oldlastMoistAvg = lastMoistAvg;    // store old last moist value
+  lastMoistAvg = moistValues[MOIST_SAMPLES / 2];  // pick the median value
+  Serial.print("median read: ");     // serial output
   Serial.print(lastMoistAvg);
-  Serial.println("");
+  Serial.print(" | ");
 
+  // test against thresholds and, if necessary, perform watering  
   resetLeds();
   if (lastMoistAvg <= DRY) {
-    Serial.println("status: VERY DRY - watering plant");
-    digitalWrite(dryLed, HIGH);
-    waterPlant();
+    Serial.println(" status: VERY DRY - watering plant");
+    digitalWrite(dryLed, HIGH);  // turn on dry led
+    waterPlant();                // do watering
     wateredLast = true;
   } else if (lastMoistAvg > DRY && lastMoistAvg < MOIST) {
-    Serial.println("status: DRY - watering plant");
-    digitalWrite(dryLed, HIGH);
-    waterPlant();
+    Serial.println(" status: DRY - watering plant");
+    digitalWrite(dryLed, HIGH);  // turn on dry led
+    waterPlant();                // do watering
     wateredLast = true;
   } else if (lastMoistAvg >= MOIST && lastMoistAvg < SOAKED) {
-    Serial.println("status: MOIST - plant is just fine");
-    digitalWrite(moistLed, HIGH);
+    Serial.println(" status: MOIST - plant is just fine");
+    digitalWrite(moistLed, HIGH);  // turn on moist led
     wateredLast = false;
   } else if (lastMoistAvg > SOAKED) {
-    Serial.println("status: SOAKED - don't water plant!");
-    digitalWrite(soakedLed, HIGH);
+    Serial.println(" status: SOAKED - don't water plant!");
+    digitalWrite(soakedLed, HIGH);  // turn on soaked led
     wateredLast = false;
   }
 
-  digitalWrite(readLed, LOW);
+  digitalWrite(readLed, LOW);  // sets the reading led off    
   Serial.println("");
 }
 
 void waterPlant() {
+  // opens a 5V line to feed a relay that will power up a pump to dispense water
+  // on the plant
+
+  // do a test for failsafe
   int diffMoist = lastMoistAvg - oldlastMoistAvg;
 
   if (wateredLast && diffMoist <= FAILSAFE_VALUE) {
     needServicing = true;
+    Serial.println("");
     Serial.println("water 1.0 is suspending execution...");
     Serial.println("EQUIPMENT NEEDS SERVICING!");
     resetLeds();
     digitalWrite(readLed, LOW);
     while (true) {
+      // if sensor has an issue, flash onLed
       digitalWrite(onLed, LOW);
       delay(1000);
       digitalWrite(onLed, HIGH);
       delay(1000);
     }
   } else {
+    // output info to serial
     Serial.print("watering started at: ");
     Serial.print(millis());
-    digitalWrite(workLed, HIGH);
+    digitalWrite(workLed, HIGH);  // light on working led
 
+    // open relay, delay and close
     digitalWrite(relayPin, HIGH);
     delay(WATER_INTERVAL);
-    digitalWrite(relayPin, LOW);
+    digitalWrite(relayPin, LOW);  // COMMENTED ONLY WHEN THERE IS NO RELAY ATTACHED
 
-    digitalWrite(workLed, LOW);
+    // output info to serial
+    digitalWrite(workLed, LOW);  // output info to serial
     Serial.print(", it lasted: ");
     Serial.print(WATER_INTERVAL);
-    Serial.println(" milliseconds");
+    Serial.print(" seconds");
+    Serial.println("");
 
     wateredLast = true;
   }
 }
 
-void setup() {
+/* arduino methods */
+void setup() {  // run once, when the sketch starts
+  // set all led pins, power & relay pins as outputs
   pinMode(onLed, OUTPUT);
   pinMode(readLed, OUTPUT);
   pinMode(workLed, OUTPUT);
@@ -201,78 +187,21 @@ void setup() {
   pinMode(powerPin, OUTPUT);
   pinMode(relayPin, OUTPUT);
 
-  digitalWrite(onLed, HIGH);
-  Serial.begin(9600);
+  digitalWrite(onLed, HIGH);  // turns on power light
+  Serial.begin(9600);         // open serial communications at 9600 bps  
   Serial.println("water 1.0 up and running...");
-
-  Serial.println("HX711 calibration sketch");
-  Serial.println("Remove all weight from scale");
-  Serial.println("After readings begin, place known weight on scale");
-  
-  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);  // Initialize the HX711 module
-  scale.set_scale();  // Set the scale to the default calibration factor
-
-  // Load zero factor from EEPROM
-  long zero_factor;
-  EEPROM.get(EEPROM_ADDRESS, zero_factor);  // Retrieve stored zero factor from EEPROM
-  if (zero_factor == 0xFFFFFFFF) {  // Check if no valid zero factor is found in EEPROM
-    Serial.println("No zero factor found in EEPROM. Please tare the scale manually.");
-    scale.tare();  // Manually tare the scale (reset to 0)
-    zero_factor = scale.read_average();  // Get a baseline reading for the zero factor
-    EEPROM.put(EEPROM_ADDRESS, zero_factor);  // Save the new zero factor to EEPROM
-  } else {
-    scale.set_offset(zero_factor);  // Apply the stored zero factor to the scale
-    Serial.println("Zero factor loaded from EEPROM.");
-  }
-  
-  Serial.print("Zero factor: ");  // Display the loaded or newly set zero factor
-  Serial.println(zero_factor);
-
-  // Set the RGB pins as output
-  pinMode(RED_PIN, OUTPUT);
-  pinMode(GREEN_PIN, OUTPUT);
-  pinMode(BLUE_PIN, OUTPUT);
+  Serial.println("");
 }
 
-void loop() {
+void loop() {  // run over and over again
+  // make a moisture check
   checkMoisture();
-  Serial.print("Delaying for ");
+
+  // output info to serial
+  Serial.print("delaying for ");
   Serial.print(MOIST_CHECK_INTERVAL / 1000);
   Serial.println(" seconds");
+  Serial.println("");
 
-  scale.set_scale(CALIBRATION_FACTOR);  // Apply the current calibration factor
-
-  float weight = scale.get_units();  // Get the weight from the scale
-
-  // Print the weight reading and the current calibration factor to the serial monitor
-  Serial.print("Reading: ");
-  Serial.print(weight, 2);  // Display the weight with 2 decimal places
-  Serial.print(" lbs");
-  Serial.print(" Calibration Factor: ");
-  Serial.println(CALIBRATION_FACTOR);
-
-  // Set LED color based on weight conditions
-  if (weight < 1.55) {
-    setColor(255, 0, 0); // Solid red if weight is less than EMPTY_WEIGHT_THRESHOLD
-  } else if (weight >= 1.55 && weight < 3.15) {
-    setColor(255, 255, 0); // Yellow if weight is between EMPTY_WEIGHT_THRESHOLD and LOW_WEIGHT_THRESHOLD
-  } else if (weight >= 3.15 && weight < 3.75) {
-    setColor(0, 255, 0); // Green if weight is between LOW_WEIGHT_THRESHOLD and SUFFICIENT_WEIGHT_THRESHOLD
-  } else {
-    setColor(0, 255, 0); // Green if weight is SUFFICIENT_WEIGHT_THRESHOLD or more
-  }
-  
   delay(MOIST_CHECK_INTERVAL);
 }
-
-// void testSetColor() {
-//   setColor(255, 0, 0); // Red
-//   delay(1000);
-//   setColor(0, 255, 0); // Green
-//   delay(1000);
-//   setColor(0, 0, 255); // Blue
-//   delay(1000);
-//   setColor(255, 255, 0); // Yellow
-//   delay(1000);
-// }
-

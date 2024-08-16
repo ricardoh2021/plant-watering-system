@@ -1,6 +1,23 @@
 #include "HX711.h"
 #include <EEPROM.h> // Include EEPROM library for storing the zero factor
 
+/**
+ * @file load_cell_rgb.ino
+ * @brief This Arduino sketch interfaces with a 10kg load cell using the HX711 module and controls an RGB LED to indicate the water level in a pitcher.
+ * 
+ * Author: Ricardo Hernandez
+ * Date: August 2024
+ *
+ * Description:
+ * This sketch reads weight data from a 10kg load cell connected to the HX711 module. The load cell measures the weight of a water pitcher. 
+ * Based on the weight, the RGB LED displays different colors to indicate the water level:
+ * - Red: Empty or low water level
+ * - Yellow: Sufficient water level
+ * - Green: Full water pitcher
+ *
+ * The code also includes calibration and zero factor handling using EEPROM to ensure accurate weight measurements.
+ */
+
 // Pin definitions for the HX711 module
 const int LOADCELL_DOUT_PIN = A4;  // Pin connected to DOUT of HX711 (Analog pin A4)
 const int LOADCELL_SCK_PIN = A5;   // Pin connected to SCK of HX711 (Analog pin A5)
@@ -139,14 +156,4 @@ void loop() {
   delay(1000);  // Delay for 1 second to allow stable readings
 }
 
-void testSetColor() {
-  setColor(255, 0, 0); // Red
-  delay(1000);
-  setColor(0, 255, 0); // Green
-  delay(1000);
-  setColor(0, 0, 255); // Blue
-  delay(1000);
-  setColor(255, 255, 0); // Yellow
-  delay(1000);
-}
 
