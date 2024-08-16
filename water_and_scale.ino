@@ -10,7 +10,7 @@
  *
  * Changelog:
  * - 2024-07-22: (Ricardo Hernandez) Optimized and refactored code for better readability and performance. Updated comments.
- * - 2024-08-16: (Ricardo Hernandez) Integrated the Load Cell with RGB Sensor into the automatic watering plant system. Merged Load Cell code into water.ino. Added docstrings for better documentation.
+ * - 2024-08-16: (Ricardo Hernandez) Integrated the Load Cell with RGB Sensor into the automatic watering plant system. Merged Load Cell code into water.ino. Added docstrings for better documentation. Removed variables that were never used. 
  * 
  * -------------------------------- IMPORTANT ------------------------------------
  * IDE Setup Instructions: (as of July 23, 2024 using v2.3.2)
