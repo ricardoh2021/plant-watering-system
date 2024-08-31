@@ -52,6 +52,12 @@ This documentation describes the functionality and configuration of a plant wate
 - **Moisture Probe Pin**: `0`
 - **Status LEDs**: Pins `2-7`
 
+## Arduino Wiring Schematic
+
+Below is the wiring schematic for the plant watering system using Arduino.
+
+![Arduino Wiring Schematic](wiring_schematic.png)
+
 ## Configuration
 - **Calibration Factor**: `-94500`
 - **Weight Thresholds**:
