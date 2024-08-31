@@ -1,6 +1,6 @@
 # Project Description and Credits
 
-Original Author: Leo Marte, Computer Science, Gettysburg College class of 2009.
+**Original Author:** Leo Marte, Computer Science, Gettysburg College class of 2009.
 
 ## Project Description
 
@@ -10,9 +10,9 @@ This project combines concepts from two distinct projects: **Botanicalls** and *
 
 One of the significant challenges was translating electrical readings from the plant into a meaningful state (dry, moist, or soaked). Extensive experimentation was conducted with two plants, Ralph and Lucy, to determine appropriate moisture readings:
 
-- For Lucy, after being left without water for five days, the sensor reading was approximately 420 units, which was deemed the DRY state.
-- Adding a full cup of water to Lucy resulted in a reading of about 1020 units, which was set as the SOAKED state.
-- The midpoint between DRY and SOAKED was chosen as the MOIST state, calculated to be 710 units.
+- For Lucy, after being left without water for five days, the sensor reading was approximately 420 units, which was deemed the **DRY** state.
+- Adding a full cup of water to Lucy resulted in a reading of about 1020 units, which was set as the **SOAKED** state.
+- The midpoint between **DRY** and **SOAKED** was chosen as the **MOIST** state, calculated to be 710 units.
 
 The Botanicalls project provided a useful tutorial on DIY sensors. Although the initial code and circuit were created without a relay, the wiring was prepared for future integration of a relay to complete the plant-watering system.
 
@@ -33,3 +33,7 @@ Inside the box:
 - The remaining extension cord with three outlets extends out of the box and connects to the plant probes.
 
 The outlets are only live when the Arduino signals the relay to close and activate the water pump. The relay stays closed for approximately three seconds by default, ensuring the plant receives water without human intervention.
+
+### Troubleshooting
+
+This file is particularly useful for isolating just the watering system and troubleshooting the moisture sensors independently. It allows you to test and refine the moisture sensing functionality separately from the overall plant-watering system.
