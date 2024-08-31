@@ -46,6 +46,7 @@
 8. [Upgrade Considerations](#upgrade-considerations)
    - [Hardware Upgrade Suggestions](#hardware-upgrade-suggestions)
    - [Possible Modifications for Indoor Plant Watering System](#possible-modifications-for-indoor-plant-watering-system)
+9. [Nail Placement](#moisture-sensor-placement)
 
 ## Description
 
