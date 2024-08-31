@@ -24,11 +24,11 @@
 - Played around with the calibration number to correct the scale readings.
 - Conducted troubleshooting for an issue with the water pump, which was not receiving power. Identified that two cables inside the enclosure were loose. Specifically, Pin 9 was not connected to the A1 Coil pin, and the black GND pin was not connected to the A2 Coil pin. After reconnecting the cables appropriately, verified functionality by testing the system on several dry plants around the house. The water pump performed as expected, confirming that the issue was resolved.
 
-![My Project Setup](images/assembled_load_cell.jpeg)
-![My Project Setup](images/soldered_wires.jpeg)
-![My Project Setup](images/scaled_with_water.jpg)
-![My Project Setup](images/Calibrated_Readings.jpg)
-![My Project Setup](images/load_cell_scale.jpeg)
+![My Project Setup](../images/assembled_load_cell.jpeg)
+![My Project Setup](../images/soldered_wires.jpeg)
+![My Project Setup](../images/scaled_with_water.jpg)
+![My Project Setup](../images/Calibrated_Readings.jpg)
+![My Project Setup](../images/load_cell_scale.jpeg)
 
 ## Following Steps:
 
