@@ -37,7 +37,7 @@
    - [Failsafe Values](#failsafe-values)
 6. [General Tips](#general-tips)
 7. [Future Modifications](#future-modifications)
-8. [Upgrade Consideration](#upgrade-consideration)
+8. [Upgrade Considerations](#upgrade-considerations)
    - [Hardware Upgrade Suggestions](#hardware-upgrade-suggestions)
 
 ## Description
@@ -224,13 +224,6 @@ The main loop reads the weight from the scale, checks for load cell errors, and 
 - Add additional sensors or features for extended functionality.
 - **Possible Update**: Consider upgrading to an Arduino Uno for improved performance and additional features.
 
-## Upgrade Consideration
-
-Upgrading from the Arduino Diecimila to the Arduino Uno offers significant benefits, including:
-
-- **Increased Flash Memory**: 32KB vs. 16KB
-- **More SRAM**: 2KB vs. 1KB
-- **Enhanced USB Communication**: ATmega16U2 chip for more reliable connection
 
 ## Upgrade Considerations
 
