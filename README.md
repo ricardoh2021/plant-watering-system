@@ -45,7 +45,7 @@
 7. [Future Modifications](#future-modifications)
 8. [Upgrade Considerations](#upgrade-considerations)
    - [Hardware Upgrade Suggestions](#hardware-upgrade-suggestions)
-     [Possible Modifications for Indoor Plant Watering System](#possible-modifications-for-indoor-plant-watering-system)
+   - [Possible Modifications for Indoor Plant Watering System](#possible-modifications-for-indoor-plant-watering-system)
 
 ## Description
 
@@ -190,102 +190,93 @@ Updates the status LEDs and triggers watering based on the average moisture leve
 
 ### `checkMoisture()`
 
-Performs a moisture check and updates the watering status.
+Performs a moisture reading and updates the system status accordingly.
 
 ### `waterPlant()`
 
-Activates the relay to water the plant if necessary. Includes a failsafe check.
+Activates the relay to turn on the water pump for a specified duration.
 
 ### `checkLoadCellError(float weight)`
 
-Checks for load cell errors by evaluating weight readings for stability and plausibility.
+Checks for load cell errors and performs error handling.
 
 ## Initialization
 
-The system initializes the HX711 scale, sets the calibration factor, and reads the zero factor from EEPROM. If the EEPROM read fails, a default zero factor is used.
+In the `setup()` function, the system initializes all sensors, LEDs, and relays. It also calibrates the load cell and reads the initial values from EEPROM.
 
 ## Main Loop
 
-The main loop reads the weight from the scale, checks for load cell errors, and updates the moisture status. It also includes a delay between iterations.
+The `loop()` function continuously checks the moisture levels and load cell status, updates the LEDs, and controls the water pump as needed.
 
-# 3D Printed Encasings
+## 3D Printed Encasings
 
-## Encasing for Scale and Pitcher
+### Encasement for Scale and Pitcher
 
-The 3D printed encasing for the scale and pitcher is designed to securely hold the components in place and protect them from damage.
+Designed to securely hold the load cell and water pitcher.
 
-## Encasing for Arduino and Wires
+### Encasement for Arduino and Wires
 
-The 3D printed encasing for the Arduino and wires ensures that the electronics are organized and protected, reducing the risk of accidental disconnections.
+Provides protection and organization for the Arduino and its connections.
 
 ## Design Process in TinkerCAD
 
-I used TinkerCAD to create the 3D printed models. The design process involved creating precise models to fit the components and ensure functionality.
+Models and prototypes were created using TinkerCAD for visualizing and refining the enclosures.
 
 ## Printing with Innovation Creativity Lab
 
-The 3D printed models were brought to life with the help of the Innovation Creativity Lab. Assistance from lab staff was instrumental in printing out the models and ensuring they met the required specifications.
+Models were printed using the resources available at the Innovation Creativity Lab.
 
 ## 3D Printed Model Files
 
-I have added the files used for the 3D printed parts in the `3D Printed Model Files` folder. Feel free to explore, modify, or create improved designs. Check the folder for all relevant files and experiment with them as needed!
+- **Water Pitcher Case**: [water_pitcher_case.stl](link-to-file)
+- **Arduino Enclosure**: [arduino_enclosure.stl](link-to-file)
 
 ## Known Issues and Troubleshooting
 
-- **Load Cell Error**: Ensure that the load cell connections are secure and the calibration factor is correctly set.
-- **Moisture Sensor Issues**: Check the sensor connections and ensure they are properly calibrated.
+- **Load Cell Inaccuracies**: Ensure proper calibration and check connections.
+- **Moisture Sensor Errors**: Verify nail placement and connection stability.
 
 ## Failsafe Values
 
-- **Default Zero Factor**: `28974` (used if EEPROM read fails).
-- **Failsafe Value for Moisture**: `200` (minimum difference in moisture readings indicating a problem).
+- **Default Weight**: `28974` (for EEPROM read/write failures)
+- **Minimum Weight Threshold**: `1.0 lbs`
 
-### General Tips
+## General Tips
 
-- **Wiring and Connections**: The most common issues are related to wiring and connections. Double-check all connections before modifying the code.
-- **Soldering Skills**: My soldering skills are beginner level. If you are experienced at soldering, consider fixing any wiring issues before adjusting the code. Most issues are likely due to poor soldering.
-- **Isolating Issues**: The best way to troubleshoot problems is to isolate the issue. I have added folders for each component, allowing you to use the code to troubleshoot specific parts. The RGB LED is connected to the Load Cell Sensor, while everything else is connected to the automatic watering system.
+- **Check Connections**: Always verify connections and soldering before troubleshooting code issues.
+- **Calibration**: Regularly calibrate the load cell to ensure accurate readings.
 
 ## Future Modifications
 
-- Improve soldering quality and wire management.
-- Enhance calibration procedures for more accurate readings.
-- Add additional sensors or features for extended functionality.
-- **Possible Update**: Consider upgrading to an Arduino Uno for improved performance and additional features.
+- **Enhance Error Handling**: Implement more sophisticated error detection and handling mechanisms.
+- **Add Remote Monitoring**: Integrate wireless communication for remote monitoring and control.
 
 ## Upgrade Considerations
 
-Upgrading from the Arduino Diecimila to the Arduino Uno offers significant benefits, including:
-
-- **Increased Flash Memory**: 32KB vs. 16KB
-- **More SRAM**: 2KB vs. 1KB
-- **Enhanced USB Communication**: ATmega16U2 chip for more reliable connection
-
-These improvements provide greater flexibility, better performance, and ongoing support, making the Arduino Uno a more robust choice for handling more complex projects and code.
-
-- **Cable Management**: Pretty self explanatory, cable management can be better.
-
 ### Hardware Upgrade Suggestions
 
-- **Water Level Sensing**: Consider integrating a float switch or another non-invasive sensor for more accurate water level readings in the reservoir.
-- **RGB LED**: Minimize the number of individual LEDs by using an RGB LED to indicate the soil moisture state, simplifying the circuit while retaining clear feedback.
-- **Moisture Sensor**: Upgrade from galvanized nails to non-corrosive moisture sensors. Corrosion can affect readings over time, so using capacitive sensors or other advanced methods for measuring soil moisture would ensure more reliable and long-lasting performance.
-  These improvements provide greater flexibility, better performance, and ongoing support, making the Arduino Uno a more robust choice for handling more complex projects and code.
+- **Upgrade to a Higher Precision Load Cell**: For more accurate weight measurements.
+- **Add More Sensors**: To monitor additional environmental factors.
 
-# Possible Modifications for Indoor Plant Watering System
+### Possible Modifications for Indoor Plant Watering System
 
-- **Wi-Fi/Bluetooth Connectivity**: Add modules to monitor and control the system via smartphone or web interface.
-- **Push Notifications**: Receive alerts for low water levels, dry soil, or system errors on your phone.
-- **Capacitive Moisture Sensors**: Upgrade to capacitive moisture sensors for more accurate soil moisture readings.
-- **Temperature and Humidity Sensor**: Monitor indoor climate conditions to optimize watering.
-- **Light Sensor**: Adjust watering based on the amount of light the plant receives.
-- **Multi-Zone Watering**: Expand the system to support multiple plants, each with its own watering zone.
-- **LCD Display**: Display real-time data, such as soil moisture levels and system status.
-- **Button Controls**: Add buttons or a rotary encoder for manual adjustments and settings.
-- **pH Sensor**: Monitor the pH of the water to ensure it's suitable for the plant.
-- **EC Sensor**: Measure the electrical conductivity to assess nutrient concentration in the water.
-- **Voice Assistant Integration**: Control the watering system using voice commands through a smart assistant like Alexa or Google Assistant.
-- **Webcam Integration**: Set up a camera to visually monitor the plant remotely.
-- **Fertilizer Pump**: Automatically dispense liquid fertilizer at set intervals.
-- **Self-Diagnostics**: Implement a feature that regularly checks system components and notifies you of any malfunctions.
-- **PC/Tablet Interface**: Develop a user-friendly interface for easier monitoring and configuration via a computer or tablet.
+- **Humidity Sensors**: Integrate sensors to measure indoor humidity.
+- **Light Sensors**: Monitor light levels to optimize plant care.
+
+## Moisture Sensor Placement
+
+**Nail Placement**
+
+- **Suggestion**: Place the nails for the moisture sensor at least 2-4 inches apart in the soil.
+
+**Why Proper Placement is Important**
+
+1. **Accurate Moisture Readings**: Placing nails too close together can cause overlapping sensor readings, leading to inaccurate moisture levels. By spacing them 2-4 inches apart, you ensure that each nail measures moisture in a distinct area of the soil, providing a more accurate representation of the soil's overall moisture content.
+
+2. **Avoid Sensor Interference**: If nails are placed too close, the readings from one nail might affect the other, resulting in interference. Proper spacing minimizes this risk and ensures that each sensor's reading is independent and reliable.
+
+3. **Improved Soil Coverage**: Spacing nails apart allows for better coverage of the soil, helping to identify varying moisture levels throughout the plant’s root zone. This is particularly useful for plants with larger root systems or uneven soil moisture distribution.
+
+4. **Reduced Corrosion**: When nails are too close, they may corrode faster due to concentrated electrochemical reactions. Proper spacing helps to mitigate this issue, extending the life of your sensors.
+
+By following these guidelines, you can enhance the performance and longevity of your moisture sensors, leading to more reliable and effective plant watering.
