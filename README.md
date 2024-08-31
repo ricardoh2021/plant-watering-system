@@ -59,7 +59,7 @@ This documentation describes the functionality and configuration of a plant wate
 
 Below is the wiring schematic for the plant watering system using Arduino.
 
-![Arduino Wiring Schematic](Finished%20Arduino%20Schematic.pdf)
+![Arduino Wiring Schematic](/images/Arduino_Schematic.png)
 
 ## Configuration
 
