@@ -229,8 +229,9 @@ Models were printed using the resources available at the Innovation Creativity L
 
 ## 3D Printed Model Files
 
-- **Water Pitcher Case**: [water_pitcher_case.stl](link-to-file)
-- **Arduino Enclosure**: [arduino_enclosure.stl](link-to-file)
+- **Water Pitcher Case**: [Automatic_Watering_System.stl](/3D%20Printed%20Model%20Files/Automatic_Watering_System.stl)
+- **Arduino Enclosure**: [Electronics_case.stl](/3D%20Printed%20Model%20Files/Electronics_case.stl)
+- **Arduino Enclosure Lid**: [Electronics_case_lide.stl](/3D%20Printed%20Model%20Files/Electronics_case_lid.stl)
 
 ## Known Issues and Troubleshooting
 
