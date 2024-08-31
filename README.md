@@ -33,6 +33,12 @@
      - [`checkLoadCellError(float weight)`](#checkloadcellerrorfloat-weight)
    - [Initialization](#initialization)
    - [Main Loop](#main-loop)
+   - [3D Printed Encasings](#3d-printed-encasings)
+   - [Encasing for Scale and Pitcher](#encasing-for-scale-and-pitcher)
+   - [Encasing for Arduino and Wires](#encasing-for-arduino-and-wires)
+   - [Design Process in TinkerCAD](#design-process-in-tinkercad)
+   - [Printing with Innovation Creativity Lab](#printing-with-innovation-creativity-lab)
+   - [3D Printed Model Files](#3d-printed-model-files)
    - [Known Issues and Troubleshooting](#known-issues-and-troubleshooting)
    - [Failsafe Values](#failsafe-values)
 6. [General Tips](#general-tips)
@@ -202,6 +208,28 @@ The system initializes the HX711 scale, sets the calibration factor, and reads t
 
 The main loop reads the weight from the scale, checks for load cell errors, and updates the moisture status. It also includes a delay between iterations.
 
+# 3D Printed Encasings
+
+## Encasing for Scale and Pitcher
+
+The 3D printed encasing for the scale and pitcher is designed to securely hold the components in place and protect them from damage.
+
+## Encasing for Arduino and Wires
+
+The 3D printed encasing for the Arduino and wires ensures that the electronics are organized and protected, reducing the risk of accidental disconnections.
+
+## Design Process in TinkerCAD
+
+I used TinkerCAD to create the 3D printed models. The design process involved creating precise models to fit the components and ensure functionality.
+
+## Printing with Innovation Creativity Lab
+
+The 3D printed models were brought to life with the help of the Innovation Creativity Lab. Assistance from lab staff was instrumental in printing out the models and ensuring they met the required specifications.
+
+## 3D Printed Model Files
+
+I have added the files used for the 3D printed parts in the `3D Printed Model Files` folder. Feel free to explore, modify, or create improved designs. Check the folder for all relevant files and experiment with them as needed!
+
 ## Known Issues and Troubleshooting
 
 - **Load Cell Error**: Ensure that the load cell connections are secure and the calibration factor is correctly set.
@@ -225,7 +253,6 @@ The main loop reads the weight from the scale, checks for load cell errors, and 
 - Add additional sensors or features for extended functionality.
 - **Possible Update**: Consider upgrading to an Arduino Uno for improved performance and additional features.
 
-
 ## Upgrade Considerations
 
 Upgrading from the Arduino Diecimila to the Arduino Uno offers significant benefits, including:
@@ -233,7 +260,7 @@ Upgrading from the Arduino Diecimila to the Arduino Uno offers significant benef
 - **Increased Flash Memory**: 32KB vs. 16KB
 - **More SRAM**: 2KB vs. 1KB
 - **Enhanced USB Communication**: ATmega16U2 chip for more reliable connection
-- **Cable Management**: Pretty self explanatory, cable management can be better. 
+- **Cable Management**: Pretty self explanatory, cable management can be better.
 
 These improvements provide greater flexibility, better performance, and ongoing support, making the Arduino Uno a more robust choice for handling more complex projects and code.
 
