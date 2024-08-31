@@ -30,9 +30,11 @@ For information about the original project started by Leo Marte `09, visit: [Wat
 # Plant Watering System Documentation
 
 ## Overview
+
 This documentation describes the functionality and configuration of a plant watering system. The system uses a load cell to measure the weight of the water pitcher, moisture sensors to determine soil moisture, and an RGB LED for feedback. It also includes failsafe conditions to handle errors and abnormal situations.
 
 ## Components
+
 - **Load Cell**: Measures the weight of the water pitcher.
 - **HX711**: Amplifies and converts the load cell signal.
 - **Moisture Sensors**: Measures soil moisture levels.
@@ -42,6 +44,7 @@ This documentation describes the functionality and configuration of a plant wate
 - **Arduino**: Arduino Diecimila
 
 ## Pin Definitions
+
 - **Load Cell DOUT Pin**: `A4`
 - **Load Cell SCK Pin**: `A5`
 - **Red LED Pin**: `10`
@@ -56,9 +59,10 @@ This documentation describes the functionality and configuration of a plant wate
 
 Below is the wiring schematic for the plant watering system using Arduino.
 
-![Arduino Wiring Schematic](wiring_schematic.png)
+![Arduino Wiring Schematic](Finished%20Arduino%20Schematic.pdf)
 
 ## Configuration
+
 - **Calibration Factor**: `-94500`
 - **Weight Thresholds**:
   - **Empty Weight Threshold**: `1.65 lbs`
@@ -75,67 +79,88 @@ Below is the wiring schematic for the plant watering system using Arduino.
   - **Failsafe Value**: `200`
 
 ## Functional Description
+
 ### LED Indicators
+
 - **Dry LED (Pin 5)**: Indicates that the soil is very dry.
 - **Moist LED (Pin 6)**: Indicates that the soil is moist.
 - **Soaked LED (Pin 7)**: Indicates that the soil is soaked.
 
 ### LED Blinks
+
 - **Purple Blink**: Indicates a load cell error.
 - **Red Blink**: Indicates that the water level is too low.
 - **Blue Blink**: Indicates a low water level warning.
 
 ### Error Handling
+
 - **Load Cell Error**: Detected if weight readings are outside a plausible range. The system blinks purple and sets `pumpEnabled` to `true`.
 - **Low Water Level**: Detected if weight is below `EMPTY_WEIGHT_THRESHOLD` or `LOW_WEIGHT_THRESHOLD`. The system blinks red or blue, respectively, and sets `lowWaterLevel` to `true`.
 
 ## Functions
+
 ### `setColor(int R, int G, int B)`
+
 Sets the color of the RGB LED.
 
 ### `blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval)`
+
 Blinks the RGB LED with specified color, duration, and interval.
 
 ### `blinkPurple()`
+
 Blinks the LED purple to indicate an error.
 
 ### `blinkRed()`
+
 Blinks the LED red to indicate a low water level.
 
 ### `blinkBlue()`
+
 Blinks the LED blue to indicate a low water level warning.
 
 ### `resetLeds()`
+
 Turns off all moisture status LEDs.
 
 ### `insertionSort(int* arr, int n)`
+
 Sorts an array of integers using insertion sort.
 
 ### `performMoistureReadings()`
+
 Averages moisture sensor readings over a defined interval and updates the average moisture level.
 
 ### `updateMoistureStatus()`
+
 Updates the status LEDs and triggers watering based on the average moisture level.
 
 ### `checkMoisture()`
+
 Performs a moisture check and updates the watering status.
 
 ### `waterPlant()`
+
 Activates the relay to water the plant if necessary. Includes a failsafe check.
 
 ### `checkLoadCellError(float weight)`
+
 Checks for load cell errors by evaluating weight readings for stability and plausibility.
 
 ## Initialization
+
 The system initializes the HX711 scale, sets the calibration factor, and reads the zero factor from EEPROM. If the EEPROM read fails, a default zero factor is used.
 
 ## Main Loop
+
 The main loop reads the weight from the scale, checks for load cell errors, and updates the moisture status. It also includes a delay between iterations.
 
 ## Known Issues and Troubleshooting
+
 - **Load Cell Error**: Ensure that the load cell connections are secure and the calibration factor is correctly set.
 - **Moisture Sensor Issues**: Check the sensor connections and ensure they are properly calibrated.
 
 ## Failsafe Values
+
 - **Default Zero Factor**: `28974` (used if EEPROM read fails).
 - **Failsafe Value for Moisture**: `200` (minimum difference in moisture readings indicating a problem).
