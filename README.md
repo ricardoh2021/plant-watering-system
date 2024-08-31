@@ -2,6 +2,44 @@
 
 **Author:** Leo Marte (Optimized and refactored by Ricardo Hernandez `21)
 
+# Table of Contents
+
+1. [Description](#description)
+2. [Changelog](#changelog)
+3. [IDE Setup Instructions](#ide-setup-instructions)
+4. [Advice for Beginners](#advice-for-beginners)
+5. [Plant Watering System Documentation](#plant-watering-system-documentation)
+   - [Overview](#overview)
+   - [Components](#components)
+   - [Pin Definitions](#pin-definitions)
+   - [Arduino Wiring Schematic](#arduino-wiring-schematic)
+   - [Configuration](#configuration)
+   - [Functional Description](#functional-description)
+     - [LED Indicators](#led-indicators)
+     - [LED Blinks](#led-blinks)
+     - [Error Handling](#error-handling)
+   - [Functions](#functions)
+     - [`setColor(int R, int G, int B)`](#setcolorint-r-int-g-int-b)
+     - [`blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval)`](#blinkledint-r-int-g-int-b-unsigned-long-duration-unsigned-long-blinkinterval)
+     - [`blinkPurple()`](#blinkpurple)
+     - [`blinkRed()`](#blinkred)
+     - [`blinkBlue()`](#blinkblue)
+     - [`resetLeds()`](#resetleds)
+     - [`insertionSort(int* arr, int n)`](#insertionsortint-arr-int-n)
+     - [`performMoistureReadings()`](#performmoisturereadings)
+     - [`updateMoistureStatus()`](#updatemoisturestatus)
+     - [`checkMoisture()`](#checkmoisture)
+     - [`waterPlant()`](#waterplant)
+     - [`checkLoadCellError(float weight)`](#checkloadcellerrorfloat-weight)
+   - [Initialization](#initialization)
+   - [Main Loop](#main-loop)
+   - [Known Issues and Troubleshooting](#known-issues-and-troubleshooting)
+   - [Failsafe Values](#failsafe-values)
+6. [General Tips](#general-tips)
+7. [Future Modifications](#future-modifications)
+8. [Upgrade Consideration](#upgrade-consideration)
+   - [Hardware Upgrade Suggestions](#hardware-upgrade-suggestions)
+
 ## Description
 
 Water 1.0 is an automated plant watering system that uses sensors to measure soil moisture and controls a pump via a relay to water the plant when needed. This project is inspired by the Botanicalls and Growduino concepts.
@@ -26,6 +64,14 @@ For information about the original project started by Leo Marte `09, visit: [Wat
 3. Select the correct processor:
    - **Processor:** ATmega168 (Due to the age of the Arduino)
 4. Compile and upload the code to the Arduino board.
+
+## Advice for Beginners
+
+If you’re new to this and feeling overwhelmed, my advice is simple: just go for it! Don't be afraid to dive in and learn something new along the way. There are countless YouTube videos and tutorials on Arduino projects that can guide you. Break the problem down into smaller pieces and build from there. Start experimenting—it's the best way to learn.
+
+This project is meant for you to expand on! Take advantage of all the tools Gettysburg College offers, like the Innovation and Creativity Lab. Don’t hesitate to ask whoever is in charge of the lab for help. Professor Neller is also a fantastic resource, so don’t be intimidated by all the wiring (my fault, haha) or if it seems complicated at first. Looks can be deceiving, but you can always start with a personal Arduino kit to get familiar with how things work. Take baby steps, and you’ll find yourself understanding more and more as you go.
+
+Have fun!
 
 # Plant Watering System Documentation
 
@@ -193,6 +239,7 @@ Upgrading from the Arduino Diecimila to the Arduino Uno offers significant benef
 - **Increased Flash Memory**: 32KB vs. 16KB
 - **More SRAM**: 2KB vs. 1KB
 - **Enhanced USB Communication**: ATmega16U2 chip for more reliable connection
+- **Cable Management**: Pretty self explanatory, cable management can be better. 
 
 These improvements provide greater flexibility, better performance, and ongoing support, making the Arduino Uno a more robust choice for handling more complex projects and code.
 
