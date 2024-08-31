@@ -175,3 +175,4 @@ The main loop reads the weight from the scale, checks for load cell errors, and 
 - Improve soldering quality and wire management.
 - Enhance calibration procedures for more accurate readings.
 - Add additional sensors or features for extended functionality.
+- **Possible Update**: Consider upgrading to an Arduino Uno for improved performance and additional features.
