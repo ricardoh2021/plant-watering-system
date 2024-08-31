@@ -169,6 +169,7 @@ The main loop reads the weight from the scale, checks for load cell errors, and 
 
 - **Wiring and Connections**: The most common issues are related to wiring and connections. Double-check all connections before modifying the code.
 - **Soldering Skills**: My soldering skills are beginner level. If you are experienced at soldering, consider fixing any wiring issues before adjusting the code. Most issues are likely due to poor soldering.
+- **Isolating Issues**: The best way to troubleshoot problems is to isolate the issue. I have added folders for each component, allowing you to use the code to troubleshoot specific parts. The RGB LED is connected to the Load Cell Sensor, while everything else is connected to the automatic watering system.
 
 ## Future Modifications
 
