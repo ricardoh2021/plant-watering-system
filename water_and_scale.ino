@@ -1,30 +1,3 @@
-/*
- * Application: Water 1.0
- * Author: Leo Marte
- *
- * Sets up a system to water a plant, by using sensors to probe water moisture
- * and opening a pump (via a relay) to water the plant when needed. Combination
- * of Botanicalls and Growduino project concepts.
- *
- * http://cs.gettysburg.edu/~martle02/cs450/
- *
- * Changelog:
- * - 2024-07-22: (Ricardo Hernandez) Optimized and refactored code for better readability and performance. Updated comments.
- * - 2024-08-16: (Ricardo Hernandez) Integrated the Load Cell with RGB Sensor into the automatic watering plant system. Merged Load Cell code into water.ino. Added docstrings for better documentation. Removed variables that were never used. 
- * 
- * -------------------------------- IMPORTANT ------------------------------------
- * IDE Setup Instructions: (as of July 23, 2024 using v2.3.2)
- * - Ensure you have the latest version of the Arduino IDE installed.
- * - Select the correct board and port:
- *   - Board: Arduino Duemilanove or Diecimila 
- *   - Port: Select the appropriate COM port
- *     - On Windows: Select the appropriate COM port (e.g., COM3, COM4, etc.)
- *     - On macOS: Select the appropriate port (e.g., /dev/tty.usbmodemxxxxx or /dev/cu.usbserial-xxxxx)
- * - Select the correct processor (CRUCIAL)
- *   - Select ATmega168 (Due to the age of the Arduino)
- * - Compile and upload the code to the Arduino board.
- */
-
 #include "HX711.h"
 #include <EEPROM.h>
 
@@ -41,8 +14,8 @@ const int BLUE_PIN = 12;   // Pin connected to the blue leg of the LED
 const int EEPROM_ADDRESS = 0;
 
 // Weight thresholds (in lbs)
-const float EMPTY_WEIGHT_THRESHOLD = 1.50; // Under this is empty
-const float LOW_WEIGHT_THRESHOLD = 3.15;
+const float EMPTY_WEIGHT_THRESHOLD = 1.65; // Under this is empty
+const float LOW_WEIGHT_THRESHOLD = 3.00;
 const float SUFFICIENT_WEIGHT_THRESHOLD = 4.00;
 
 // Calibration factor for scaling the raw data to weight units
@@ -89,6 +62,11 @@ boolean wateredLast = false;
 boolean pumpEnabled = true;
 boolean lowWaterLevel = false;  // Global variable to track low water level status
 
+const long DEFAULT_ZERO_FACTOR = 28974;  // Default zero factor in case EEPROM read fails
+
+boolean loadCellError = false;  // Global variable to track load cell errors
+
+
 /* HELPER METHODS */
 
 /**
@@ -105,21 +83,68 @@ void setColor(int R, int G, int B) {
 }
 
 /**
- * @brief Function to blink the red LED.
+ * @brief Function to blink an LED with customizable color and duration.
+ * 
+ * @param R Red component (0-255).
+ * @param G Green component (0-255).
+ * @param B Blue component (0-255).
+ * @param duration Total duration for blinking (milliseconds).
+ * @param blinkInterval Interval between blinks (milliseconds).
  */
-void blinkRed() {
-  setColor(255, 0, 0); // Red
-  delay(500);  // Wait 500 ms
-  setColor(0, 0, 0); // Turn off the LED
-  delay(500);  // Wait 500 ms
+void blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval) {
+  unsigned long startTime = millis();
+  while (millis() - startTime < duration) {
+    setColor(R, G, B);
+    delay(blinkInterval);
+    setColor(0, 0, 0); // Turn off the LED
+    delay(blinkInterval);
+  }
 }
 
+/**
+ * @brief Blink the RGB LED in purple color.
+ * 
+ * The LED blinks purple for a duration of 9000 milliseconds with a 500 milliseconds interval.
+ */
+void blinkPurple() {
+  blinkLed(128, 0, 128, 9000, 500);
+}
+
+/**
+ * @brief Blink the RGB LED in red color.
+ * 
+ * The LED blinks red for a duration of 9000 milliseconds with a 500 milliseconds interval.
+ */
+void blinkRed() {
+  blinkLed(255, 0, 0, 9000, 500);
+}
+
+/**
+ * @brief Blink the RGB LED in blue color.
+ * 
+ * The LED blinks blue for a duration of 9000 milliseconds with a 500 milliseconds interval.
+ */
+void blinkBlue() {
+  blinkLed(0, 0, 255, 9000, 500);
+}
+
+/**
+ * @brief Reset the state of the moisture status LEDs.
+ * 
+ * This function turns off all moisture status LEDs (dry, moist, soaked).
+ */
 void resetLeds() {
   digitalWrite(dryLed, LOW);
   digitalWrite(moistLed, LOW);
   digitalWrite(soakedLed, LOW);
 }
 
+/**
+ * @brief Sort an array of integers using the insertion sort algorithm.
+ * 
+ * @param arr Pointer to the array to be sorted.
+ * @param n Number of elements in the array.
+ */
 void insertionSort(int* arr, int n) {
   for (int i = 1; i < n; i++) {
     int key = arr[i];
@@ -133,18 +158,18 @@ void insertionSort(int* arr, int n) {
   }
 }
 
-void checkMoisture() {
-  if (!pumpEnabled) return;  // Skip moisture check if pump is disabled
-
-  digitalWrite(readLed, HIGH);
-
-  // Collect readings
+/**
+ * @brief Perform moisture readings by averaging multiple samples.
+ * 
+ * Reads moisture sensor values over a defined interval, sorts the readings, and updates
+ * the average moisture level.
+ */
+void performMoistureReadings() {
   for (int i = 0; i < MOIST_SAMPLES + 1; i++) {
     digitalWrite(powerPin, HIGH);
     int val = analogRead(probePin);
     digitalWrite(powerPin, LOW);
 
-    // Discard the first reading
     if (i != 0) {
       moistValues[i - 1] = val;
       lastMoistTime = millis();
@@ -153,16 +178,18 @@ void checkMoisture() {
     delay(MOIST_SAMPLE_INTERVAL);
   }
 
-  // Sort readings to get the median
   insertionSort(moistValues, MOIST_SAMPLES);
   oldlastMoistAvg = lastMoistAvg;
   lastMoistAvg = moistValues[MOIST_SAMPLES / 2];
+}
 
-  Serial.print("median read: ");
-  Serial.print(lastMoistAvg);
-  Serial.print(" | ");
-
-  // Check moisture levels and decide if watering is needed
+/**
+ * @brief Update the moisture status and control the watering process.
+ * 
+ * Updates the status LEDs based on the average moisture level and triggers the watering
+ * process if needed.
+ */
+void updateMoistureStatus() {
   resetLeds();
   if (lastMoistAvg <= DRY) {
     Serial.println(" status: VERY DRY - watering plant");
@@ -179,57 +206,89 @@ void checkMoisture() {
     Serial.println(" status: SOAKED - don't water plant!");
     digitalWrite(soakedLed, HIGH);
   }
+}
 
+/**
+ * @brief Perform a moisture check and update the plant watering status.
+ * 
+ * Reads the moisture sensor values, prints the average moisture level, and updates
+ * the moisture status.
+ */
+void checkMoisture() {
+  digitalWrite(readLed, HIGH);
+  performMoistureReadings();
+  Serial.print("median read: ");
+  Serial.print(lastMoistAvg);
+  Serial.print(" | ");
+  updateMoistureStatus();
   digitalWrite(readLed, LOW);
 }
 
+/**
+ * @brief Water the plant by activating the relay to control the pump.
+ * 
+ * If the moisture readings are not within the acceptable range or if the watering fails,
+ * the system will enter a service mode. The pump will be activated to water the plant
+ * for a defined interval.
+ */
 void waterPlant() {
-  if (lowWaterLevel) {
-    Serial.println("Pump deactivated due to low water level. Watering skipped.");
-    return;  // Exit the function early if water level is too low
+  if(!pumpEnabled){
+    return;
   }
 
+  // Test for failsafe condition
   int diffMoist = lastMoistAvg - oldlastMoistAvg;
 
-  if (wateredLast && diffMoist <= FAILSAFE_VALUE) {
+  if( wateredLast && diffMoist <= FAILSAFE_VALUE ){
     needServicing = true;
     Serial.println("");
     Serial.println("water 1.0 is suspending execution...");
     Serial.println("EQUIPMENT NEEDS SERVICING!");
     resetLeds();
-    while (true) {
-      digitalWrite(onLed, LOW);
-      delay(1000);
+    digitalWrite(readLed, LOW);
+    while(true){
+      // If sensor has an issue, flash onLed
+      digitalWrite(onLed, LOW); 
+      delay(1000);      
       digitalWrite(onLed, HIGH);
-      delay(1000);
+      delay(1000);  
     }
-  } else {
+  }
+  else{
+    // Output info to serial
     Serial.print("watering started at: ");
     Serial.print(millis());
-    digitalWrite(workLed, HIGH);
+    digitalWrite(workLed, HIGH); // Light on working LED
 
+    // Open relay, delay, and close
     digitalWrite(relayPin, HIGH);
     delay(WATER_INTERVAL);
-    digitalWrite(relayPin, LOW);
+    digitalWrite(relayPin, LOW);  // COMMENTED ONLY WHEN THERE IS NO RELAY ATTACHED
 
-    digitalWrite(workLed, LOW);
+    // Output info to serial
+    digitalWrite(workLed, LOW);     
     Serial.print(", it lasted: ");
     Serial.print(WATER_INTERVAL);
     Serial.print(" seconds");
     Serial.println("");
-
+    
     wateredLast = true;
   }
 }
 
-/* Arduino methods */
+/**
+ * @brief Initialize the Arduino board and set up the HX711 scale.
+ * 
+ * Configures the pin modes for LEDs, relay, and other components. Initializes serial
+ * communication, starts the HX711 scale, and loads the zero factor from EEPROM.
+ * Sets the calibration factor and offset for the scale.
+ */
 void setup() {
   pinMode(onLed, OUTPUT);
   pinMode(readLed, OUTPUT);
   pinMode(workLed, OUTPUT);
   pinMode(dryLed, OUTPUT);
   pinMode(moistLed, OUTPUT);
-  pinMode(soakedLed, OUTPUT);
   pinMode(powerPin, OUTPUT);
   pinMode(relayPin, OUTPUT);
 
@@ -244,58 +303,117 @@ void setup() {
   // Load zero factor from EEPROM
   long zero_factor;
   EEPROM.get(EEPROM_ADDRESS, zero_factor);
-  if (zero_factor == 0xFFFFFFFF) {
-    scale.tare();
-    zero_factor = scale.read_average();
-    EEPROM.put(EEPROM_ADDRESS, zero_factor);
-  } else {
-    scale.set_offset(zero_factor);
+  
+  if (zero_factor == 0xFFFFFFFF || isnan(zero_factor) || zero_factor == 0) {
+    Serial.println("EEPROM read failed or data is invalid. Using default zero factor.");
+    zero_factor = DEFAULT_ZERO_FACTOR;  // Use default zero factor
+    EEPROM.put(EEPROM_ADDRESS, zero_factor);  // Attempt to write default value back to EEPROM
   }
+  
+  scale.set_offset(zero_factor);  // Apply the zero factor
 
   // Set the RGB pins as output
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
-
-  setColor(255, 0, 0);
 }
 
+/**
+ * @brief Check for load cell errors by verifying if the weight readings are within a plausible range.
+ * 
+ * Evaluates weight readings for stability and plausibility over a defined interval. If the readings
+ * consistently fall outside the plausible range, an error is flagged.
+ * 
+ * @param weight Current weight reading from the scale.
+ * @return true if a load cell error is detected; otherwise, false.
+ */
+bool checkLoadCellError(float weight) {
+  // Define plausible weight range (adjust as needed)
+  const float MIN_PLAUSIBLE_WEIGHT = -0.02;  // Minimum plausible weight
+  const float MAX_PLAUSIBLE_WEIGHT = 10.0;   // Maximum plausible weight
+
+  // Example stability check: verify if weight readings are consistently out of bounds
+  static float prevWeight = 0;
+  static unsigned long lastCheckTime = 0;
+  const unsigned long CHECK_INTERVAL = 5000;  // Check interval in milliseconds
+  const int STABILITY_COUNT = 10;  // Number of consecutive out-of-bound readings for error
+
+  if (millis() - lastCheckTime > CHECK_INTERVAL) {
+    lastCheckTime = millis();
+    prevWeight = weight;  // Update previous weight reading
+    return false;  // No error detected yet
+  }
+
+  static int outOfBoundCount = 0;
+
+  if (weight < MIN_PLAUSIBLE_WEIGHT || weight > MAX_PLAUSIBLE_WEIGHT) {
+    outOfBoundCount++;
+    if (outOfBoundCount >= STABILITY_COUNT) {
+      loadCellError = true;
+      return true;  // Error detected
+    }
+  } else {
+    outOfBoundCount = 0;  // Reset count if within bounds
+  }
+
+  loadCellError = false;
+  return false;  // No error detected
+}
+
+/**
+ * @brief Main loop of the Arduino program that performs regular tasks.
+ * 
+ * Continuously reads the weight from the HX711 scale, checks for load cell errors, and updates
+ * the status of the plant watering system based on the weight and moisture readings. 
+ * Includes a delay between iterations.
+ */
 void loop() {
   scale.set_scale(CALIBRATION_FACTOR);  // Apply the current calibration factor
 
   float weight = scale.get_units();  // Get the weight from the scale
-
-  // Print the weight reading and the current calibration factor to the serial monitor
-  Serial.print("Reading: ");
-  Serial.print(weight, 2);  // Display the weight with 2 decimal places
-  Serial.print(" lbs");
-  Serial.print(" calibration_factor: ");
-  Serial.print(CALIBRATION_FACTOR);
+  Serial.print("Weight is: ");
+  Serial.print(weight);
+  Serial.print(" lbs.");
   Serial.println();
 
-  // Set LED color based on weight conditions and check water level
-  if (weight < EMPTY_WEIGHT_THRESHOLD) {
-    blinkRed();
-    lowWaterLevel = true;  // Set the flag indicating low water level
-    Serial.println("Water level too low! Pump deactivated.");
-  } else if (weight < LOW_WEIGHT_THRESHOLD) {
-    setColor(255, 0, 0);  // Solid red
-    lowWaterLevel = true;  // Set the flag indicating low water level
-    Serial.println("Water level too low! Pump deactivated.");
-  } else if (weight < SUFFICIENT_WEIGHT_THRESHOLD) {
-    setColor(255, 255, 0);  // Yellow
-    lowWaterLevel = false;  // Water level is sufficient, clear the flag
+  // Check for load cell errors
+  if (checkLoadCellError(weight)) {
+    Serial.println("Load cell error detected. Pump will be enabled regardless of water level.");
+    blinkPurple(); // Blink purple to indicate error
+
+    // Default mode: Enable pump regardless of water level
+    pumpEnabled = true;
+    lowWaterLevel = false;  // Clear the low water level flag in error state
+    setColor(255, 0, 0);    // Optional: Indicate error with red LED
   } else {
-    setColor(0, 255, 0);  // Green
-    lowWaterLevel = false;  // Water level is sufficient, clear the flag
+    // Set LED color based on weight conditions and check water level
+    if (weight < EMPTY_WEIGHT_THRESHOLD) {
+      blinkRed();
+      lowWaterLevel = true;  // Set the flag indicating low water level
+      Serial.println("Water level too low! May harm pump.");
+      pumpEnabled = false;
+    } else if (weight < LOW_WEIGHT_THRESHOLD) {
+      blinkBlue();
+      lowWaterLevel = true;  // Set the flag indicating low water level
+      Serial.println("Water level too low! Pump deactivated.");
+    } else if (weight < SUFFICIENT_WEIGHT_THRESHOLD) {
+      setColor(255, 255, 0);  // Yellow
+      lowWaterLevel = false;  // Water level is sufficient, clear the flag
+      pumpEnabled = true;
+    } else {
+      setColor(0, 255, 0);  // Green
+      lowWaterLevel = false;  // Water level is sufficient, clear the flag
+      pumpEnabled = true;
+    }
   }
 
-  // If water level is too low, skip the moisture check and watering
-  if (lowWaterLevel) {
-    Serial.println("Skipping moisture check due to low water level.");
-  } else {
-    checkMoisture();
+  // If water level is too low, load cell error detected, or pump failure detected, skip the moisture check
+  if (lowWaterLevel || loadCellError) {
+    Serial.println("Issues have occurred. Check Water Level. Otherwise, issue with Load Cell Scale.");
   }
+
+  checkMoisture();
+
   Serial.print("delaying for ");
   Serial.print(MOIST_CHECK_INTERVAL / 1000);
   Serial.println(" seconds");
