@@ -1,6 +1,6 @@
 # Water 1.0
 
-**Author:** Leo Marte (Optimized and refactored by Ricardo Hernandez `21)
+**Author:** Ricardo Hernandez
 
 # Table of Contents
 
