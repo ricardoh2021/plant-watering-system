@@ -260,9 +260,10 @@ Upgrading from the Arduino Diecimila to the Arduino Uno offers significant benef
 - **Increased Flash Memory**: 32KB vs. 16KB
 - **More SRAM**: 2KB vs. 1KB
 - **Enhanced USB Communication**: ATmega16U2 chip for more reliable connection
-- **Cable Management**: Pretty self explanatory, cable management can be better.
 
 These improvements provide greater flexibility, better performance, and ongoing support, making the Arduino Uno a more robust choice for handling more complex projects and code.
+
+- **Cable Management**: Pretty self explanatory, cable management can be better.
 
 ### Hardware Upgrade Suggestions
 
