@@ -33,5 +33,3 @@ Inside the box:
 - The remaining extension cord with three outlets extends out of the box and connects to the plant probes.
 
 The outlets are only live when the Arduino signals the relay to close and activate the water pump. The relay stays closed for approximately three seconds by default, ensuring the plant receives water without human intervention.
-
-## Code Credits
