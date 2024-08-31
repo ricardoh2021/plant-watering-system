@@ -164,3 +164,14 @@ The main loop reads the weight from the scale, checks for load cell errors, and 
 
 - **Default Zero Factor**: `28974` (used if EEPROM read fails).
 - **Failsafe Value for Moisture**: `200` (minimum difference in moisture readings indicating a problem).
+
+### General Tips
+
+- **Wiring and Connections**: The most common issues are related to wiring and connections. Double-check all connections before modifying the code.
+- **Soldering Skills**: My soldering skills are beginner level. If you are experienced at soldering, consider fixing any wiring issues before adjusting the code. Most issues are likely due to poor soldering.
+
+## Future Modifications
+
+- Improve soldering quality and wire management.
+- Enhance calibration procedures for more accurate readings.
+- Add additional sensors or features for extended functionality.
