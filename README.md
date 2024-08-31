@@ -39,6 +39,7 @@ This documentation describes the functionality and configuration of a plant wate
 - **RGB LED**: Provides visual feedback about the system status.
 - **Relay**: Controls the water pump.
 - **EEPROM**: Stores the zero factor for the load cell.
+- **Arduino**: Arduino Diecimila
 
 ## Pin Definitions
 - **Load Cell DOUT Pin**: `A4`
