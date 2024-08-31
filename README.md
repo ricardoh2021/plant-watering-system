@@ -11,6 +11,7 @@ For more information, visit: [Water 1.0 Project](http://cs.gettysburg.edu/~tnell
 ## Changelog
 
 - **2024-07-22:** (Ricardo Hernandez) Optimized and refactored code for better readability and performance. Updated comments.
+- **2024-08-31:** (Ricardo Hernandez) Integrated Load Cell Scale, RGB LED, into watering system.
 
 ## IDE Setup Instructions
 
@@ -26,74 +27,108 @@ For more information, visit: [Water 1.0 Project](http://cs.gettysburg.edu/~tnell
    - **Processor:** ATmega168 (Due to the age of the Arduino)
 4. Compile and upload the code to the Arduino board.
 
-## Define Your Botanical Preferences
+# Plant Watering System Documentation
 
-Adjust the moisture thresholds based on your plant's needs:
+## Overview
+This documentation describes the functionality and configuration of a plant watering system. The system uses a load cell to measure the weight of the water pitcher, moisture sensors to determine soil moisture, and an RGB LED for feedback. It also includes failsafe conditions to handle errors and abnormal situations.
 
-```cpp
-#define DRY 420               // After not being watered for ~5 days
-#define MOIST 710             // Midpoint between DRY and SOAKED
-#define SOAKED 1000           // Least desired level after watering
-```
+## Components
+- **Load Cell**: Measures the weight of the water pitcher.
+- **HX711**: Amplifies and converts the load cell signal.
+- **Moisture Sensors**: Measures soil moisture levels.
+- **RGB LED**: Provides visual feedback about the system status.
+- **Relay**: Controls the water pump.
+- **EEPROM**: Stores the zero factor for the load cell.
 
-## Define constants 
-Configure timing and intervals for moisture checks and watering:
+## Pin Definitions
+- **Load Cell DOUT Pin**: `A4`
+- **Load Cell SCK Pin**: `A5`
+- **Red LED Pin**: `10`
+- **Green LED Pin**: `11`
+- **Blue LED Pin**: `12`
+- **Relay Pin**: `9`
+- **Power Pin**: `8`
+- **Moisture Probe Pin**: `0`
+- **Status LEDs**: Pins `2-7`
 
-```cpp
-#define MOIST_CHECK_INTERVAL 20000   // Milliseconds between checks (1 minute)
-#define MOIST_SAMPLE_INTERVAL 2000   // Milliseconds for averaging readings
-#define WATER_INTERVAL 3000          // Milliseconds to allow for water flow
-#define MOIST_SAMPLES 10             // Number of samples to average
-#define FAILSAFE_VALUE 200           // Minimum difference in moisture to indicate successful watering
-```
+## Configuration
+- **Calibration Factor**: `-94500`
+- **Weight Thresholds**:
+  - **Empty Weight Threshold**: `1.65 lbs`
+  - **Low Weight Threshold**: `3.00 lbs`
+  - **Sufficient Weight Threshold**: `4.00 lbs`
+- **Moisture Levels**:
+  - **Dry**: `420`
+  - **Moist**: `710`
+  - **Soaked**: `1000`
+- **Intervals**:
+  - **Moisture Check Interval**: `10000 ms`
+  - **Moisture Sample Interval**: `2000 ms`
+  - **Water Interval**: `3000 ms`
+  - **Failsafe Value**: `200`
 
-## Program Variables and Board Pins
+## Functional Description
+### LED Indicators
+- **Dry LED (Pin 5)**: Indicates that the soil is very dry.
+- **Moist LED (Pin 6)**: Indicates that the soil is moist.
+- **Soaked LED (Pin 7)**: Indicates that the soil is soaked.
 
-Configure the pins for LEDs, power, relay, and probe:
+### LED Blinks
+- **Purple Blink**: Indicates a load cell error.
+- **Red Blink**: Indicates that the water level is too low.
+- **Blue Blink**: Indicates a low water level warning.
 
-```cpp
-// LEDs
-#define onLed 2
-#define readLed 3
-#define workLed 4
-#define dryLed 5
-#define moistLed 6
-#define soakedLed 7
+### Error Handling
+- **Load Cell Error**: Detected if weight readings are outside a plausible range. The system blinks purple and sets `pumpEnabled` to `true`.
+- **Low Water Level**: Detected if weight is below `EMPTY_WEIGHT_THRESHOLD` or `LOW_WEIGHT_THRESHOLD`. The system blinks red or blue, respectively, and sets `lowWaterLevel` to `true`.
 
-// Probes
-#define powerPin 8
-#define relayPin 9
-#define probePin 0
-```
+## Functions
+### `setColor(int R, int G, int B)`
+Sets the color of the RGB LED.
 
-## Helper Methods
+### `blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval)`
+Blinks the RGB LED with specified color, duration, and interval.
 
-### resetLeds()
+### `blinkPurple()`
+Blinks the LED purple to indicate an error.
 
-Resets all plant status LEDs to the OFF state.
+### `blinkRed()`
+Blinks the LED red to indicate a low water level.
 
-### insertionSort()
+### `blinkBlue()`
+Blinks the LED blue to indicate a low water level warning.
 
-Sorts the moisture readings array using the Insertion Sort algorithm for better performance and readability.
+### `resetLeds()`
+Turns off all moisture status LEDs.
 
-### checkMoisture()
+### `insertionSort(int* arr, int n)`
+Sorts an array of integers using insertion sort.
 
-Collects and processes moisture readings, determines watering status, and updates the status LEDs.
+### `performMoistureReadings()`
+Averages moisture sensor readings over a defined interval and updates the average moisture level.
 
-### waterPlant()
+### `updateMoistureStatus()`
+Updates the status LEDs and triggers watering based on the average moisture level.
 
-Manages the watering of the plant, activates the relay to dispense water, and includes a failsafe check for equipment servicing.
+### `checkMoisture()`
+Performs a moisture check and updates the watering status.
 
-## Arduino Methods
+### `waterPlant()`
+Activates the relay to water the plant if necessary. Includes a failsafe check.
 
-### setup()
+### `checkLoadCellError(float weight)`
+Checks for load cell errors by evaluating weight readings for stability and plausibility.
 
-Initializes the Arduino board, sets up pins, and starts serial communication.
+## Initialization
+The system initializes the HX711 scale, sets the calibration factor, and reads the zero factor from EEPROM. If the EEPROM read fails, a default zero factor is used.
 
-### loop()
+## Main Loop
+The main loop reads the weight from the scale, checks for load cell errors, and updates the moisture status. It also includes a delay between iterations.
 
-Main loop that repeatedly checks moisture levels and performs actions based on the readings.
+## Known Issues and Troubleshooting
+- **Load Cell Error**: Ensure that the load cell connections are secure and the calibration factor is correctly set.
+- **Moisture Sensor Issues**: Check the sensor connections and ensure they are properly calibrated.
 
-### License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
+## Failsafe Values
+- **Default Zero Factor**: `28974` (used if EEPROM read fails).
+- **Failsafe Value for Moisture**: `200` (minimum difference in moisture readings indicating a problem).
