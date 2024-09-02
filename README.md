@@ -5,7 +5,7 @@
 
 **Author:** Ricardo Hernandez
 
-# Table of Contents
+## Table of Contents
 
 1. [Description](#description)
 2. [Changelog](#changelog)
@@ -37,8 +37,8 @@
    - [Initialization](#initialization)
    - [Main Loop](#main-loop)
    - [3D Printed Encasings](#3d-printed-encasings)
-   - [Encasing for Scale and Pitcher](#encasing-for-scale-and-pitcher)
-   - [Encasing for Arduino and Wires](#encasing-for-arduino-and-wires)
+     - [Encasing for Scale and Pitcher](#encasing-for-scale-and-pitcher)
+     - [Encasing for Arduino and Wires](#encasing-for-arduino-and-wires)
    - [Design Process in TinkerCAD](#design-process-in-tinkercad)
    - [Printing with Innovation Creativity Lab](#printing-with-innovation-creativity-lab)
    - [3D Printed Model Files](#3d-printed-model-files)
@@ -49,7 +49,7 @@
 8. [Upgrade Considerations](#upgrade-considerations)
    - [Hardware Upgrade Suggestions](#hardware-upgrade-suggestions)
    - [Possible Modifications for Indoor Plant Watering System](#possible-modifications-for-indoor-plant-watering-system)
-9. [Nail Placement](#moisture-sensor-placement)
+9. [Nail Placement](#nail-placement)
 
 ## Description
 
@@ -60,7 +60,7 @@ For information about the original project started by Leo Marte `09, visit: [Wat
 ## Changelog
 
 - **2024-07-22:** (Ricardo Hernandez) Optimized and refactored code for better readability and performance. Updated comments.
-- **2024-08-31:** (Ricardo Hernandez) Integrated Load Cell Scale, RGB LED, into watering system.
+- **2024-08-31:** (Ricardo Hernandez) Integrated Load Cell Scale, RGB LED, into the watering system.
 
 ## IDE Setup Instructions
 
@@ -84,13 +84,13 @@ This project is meant for you to expand on! Take advantage of all the tools Gett
 
 Have fun!
 
-# Plant Watering System Documentation
+## Plant Watering System Documentation
 
-## Overview
+### Overview
 
 This documentation describes the functionality and configuration of a plant watering system. The system uses a load cell to measure the weight of the water pitcher, moisture sensors to determine soil moisture, and an RGB LED for feedback. It also includes failsafe conditions to handle errors and abnormal situations.
 
-## Components
+### Components
 
 - **Load Cell**: Measures the weight of the water pitcher.
 - **HX711**: Amplifies and converts the load cell signal.
@@ -100,7 +100,7 @@ This documentation describes the functionality and configuration of a plant wate
 - **EEPROM**: Stores the zero factor for the load cell.
 - **Arduino**: Arduino Diecimila
 
-## Pin Definitions
+### Pin Definitions
 
 - **Load Cell DOUT Pin**: `A4`
 - **Load Cell SCK Pin**: `A5`
@@ -112,13 +112,13 @@ This documentation describes the functionality and configuration of a plant wate
 - **Moisture Probe Pin**: `0`
 - **Status LEDs**: Pins `2-7`
 
-## Arduino Wiring Schematic
+### Arduino Wiring Schematic
 
 Below is the wiring schematic for the plant watering system using Arduino.
 
 ![Arduino Wiring Schematic](/images/Arduino_Schematic.png)
 
-## Configuration
+### Configuration
 
 - **Calibration Factor**: `-94500`
 - **Weight Thresholds**:
@@ -135,153 +135,134 @@ Below is the wiring schematic for the plant watering system using Arduino.
   - **Water Interval**: `3000 ms`
   - **Failsafe Value**: `200`
 
-## Functional Description
+### Functional Description
 
-### LED Indicators
+#### LED Indicators
 
 - **Dry LED (Pin 5)**: Indicates that the soil is very dry.
 - **Moist LED (Pin 6)**: Indicates that the soil is moist.
 - **Soaked LED (Pin 7)**: Indicates that the soil is soaked.
 
-### LED Blinks
+#### LED Blinks
 
 - **Purple Blink**: Indicates a load cell error.
 - **Red Blink**: Indicates that the water level is too low.
 - **Blue Blink**: Indicates a low water level warning.
 
-### Error Handling
+#### Error Handling
 
 - **Load Cell Error**: Detected if weight readings are outside a plausible range. The system blinks purple and sets `pumpEnabled` to `true`.
 - **Low Water Level**: Detected if weight is below `EMPTY_WEIGHT_THRESHOLD` or `LOW_WEIGHT_THRESHOLD`. The system blinks red or blue, respectively, and sets `lowWaterLevel` to `true`.
 
-## Functions
+### Functions
 
-### `setColor(int R, int G, int B)`
+#### `setColor(int R, int G, int B)`
 
 Sets the color of the RGB LED.
 
-### `blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval)`
+#### `blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval)`
 
-Blinks the RGB LED with specified color, duration, and interval.
+Blinks the RGB LED with the specified color, duration, and interval.
 
-### `blinkPurple()`
+#### `blinkPurple()`
 
 Blinks the LED purple to indicate an error.
 
-### `blinkRed()`
+#### `blinkRed()`
 
 Blinks the LED red to indicate a low water level.
 
-### `blinkBlue()`
+#### `blinkBlue()`
 
 Blinks the LED blue to indicate a low water level warning.
 
-### `resetLeds()`
+#### `resetLeds()`
 
 Turns off all moisture status LEDs.
 
-### `insertionSort(int* arr, int n)`
+#### `insertionSort(int* arr, int n)`
 
 Sorts an array of integers using insertion sort.
 
-### `performMoistureReadings()`
+#### `performMoistureReadings()`
 
 Averages moisture sensor readings over a defined interval and updates the average moisture level.
 
-### `updateMoistureStatus()`
+#### `updateMoistureStatus()`
 
 Updates the status LEDs and triggers watering based on the average moisture level.
 
-### `checkMoisture()`
+#### `checkMoisture()`
 
-Performs a moisture reading and updates the system status accordingly.
+Determines if the plant needs watering based on moisture sensor readings.
 
-### `waterPlant()`
+#### `waterPlant()`
 
-Activates the relay to turn on the water pump for a specified duration.
+Controls the relay to water the plant if conditions are met.
 
-### `checkLoadCellError(float weight)`
+#### `checkLoadCellError(float weight)`
 
-Checks for load cell errors and performs error handling.
+Checks for errors in load cell readings and adjusts the system state accordingly.
 
-## Initialization
+### Initialization
 
-In the `setup()` function, the system initializes all sensors, LEDs, and relays. It also calibrates the load cell and reads the initial values from EEPROM.
+The initialization routine sets up pin modes, initial states, and EEPROM values.
 
-## Main Loop
+### Main Loop
 
-The `loop()` function continuously checks the moisture levels and load cell status, updates the LEDs, and controls the water pump as needed.
+The main loop continuously checks moisture levels, updates system status, and triggers watering actions based on the current conditions.
 
-## 3D Printed Encasings
+### 3D Printed Encasings
 
-### Encasement for Scale and Pitcher
+#### Encasing for Scale and Pitcher
 
-Designed to securely hold the load cell and water pitcher.
+A custom 3D printed case was designed to hold the scale and water pitcher securely.
 
-### Encasement for Arduino and Wires
+#### Encasing for Arduino and Wires
 
-Provides protection and organization for the Arduino and its connections.
+A separate 3D printed case was created to keep the Arduino and wires organized.
 
-## Design Process in TinkerCAD
+### Printing with Innovation Creativity Lab
 
-Models and prototypes were created using TinkerCAD for visualizing and refining the enclosures.
+The encasings were printed using the facilities at the Innovation Creativity Lab at Gettysburg College.
 
-## Printing with Innovation Creativity Lab
+### 3D Printed Model Files
 
-Models were printed using the resources available at the Innovation Creativity Lab.
+Model files for the 3D printed encasings are available in the 3D Printed Model Files Folder
 
-## 3D Printed Model Files
+### Known Issues and Troubleshooting
 
-- **Water Pitcher Case**: [Automatic_Watering_System.stl](/3D%20Printed%20Model%20Files/Automatic_Watering_System.stl)
-- **Arduino Enclosure**: [Electronics_case.stl](/3D%20Printed%20Model%20Files/Electronics_case.stl)
-- **Arduino Enclosure Lid**: [Electronics_case_lide.stl](/3D%20Printed%20Model%20Files/Electronics_case_lid.stl)
+- **Incorrect Load Cell Readings**: Verify wiring connections and solder joints.
+- **Moisture Sensor Calibration**: Check soil and adjust thresholds as needed.
 
-## Known Issues and Troubleshooting
+### Failsafe Values
 
-- **Load Cell Inaccuracies**: Ensure proper calibration and check connections.
-- **Moisture Sensor Errors**: Verify nail placement and connection stability.
-
-## Failsafe Values
-
-- **Default Weight**: `28974` (for EEPROM read/write failures)
-- **Minimum Weight Threshold**: `1.0 lbs`
+- **Default Zero Factor**: `28974`
+- **Empty Weight Threshold**: `1.65 lbs`
+- **Low Weight Threshold**: `3.00 lbs`
+- **Sufficient Weight Threshold**: `4.00 lbs`
 
 ## General Tips
 
-- **Check Connections**: Always verify connections and soldering before troubleshooting code issues.
-- **Calibration**: Regularly calibrate the load cell to ensure accurate readings.
+1. Regularly check soldering joints for loose connections.
+2. Ensure the water pitcher is correctly placed on the scale.
+3. Clean the moisture sensors periodically to avoid false readings.
+4. Use waterproofing measures for the electronics in case of accidental water spills.
 
 ## Future Modifications
 
-- **Enhance Error Handling**: Implement more sophisticated error detection and handling mechanisms.
-- **Add Remote Monitoring**: Integrate wireless communication for remote monitoring and control.
+### Upgrade Considerations
 
-## Upgrade Considerations
+#### Hardware Upgrade Suggestions
 
-### Hardware Upgrade Suggestions
+- Upgrade to a more accurate load cell with a higher weight capacity.
+- Add additional sensors, such as a temperature or humidity sensor.
 
-- **Upgrade to a Higher Precision Load Cell**: For more accurate weight measurements.
-- **Add More Sensors**: To monitor additional environmental factors.
+#### Possible Modifications for Indoor Plant Watering System
 
-### Possible Modifications for Indoor Plant Watering System
+- Incorporate a Wi-Fi module to remotely monitor and control the system.
+- Implement a mobile app for real-time notifications and control.
 
-- **Humidity Sensors**: Integrate sensors to measure indoor humidity.
-- **Light Sensors**: Monitor light levels to optimize plant care.
+## Nail Placement
 
-## Moisture Sensor Placement
-
-**Nail Placement**
-
-- **Suggestion**: Place the nails for the moisture sensor at least 2-4 inches apart in the soil.
-
-**Why Proper Placement is Important**
-
-1. **Accurate Moisture Readings**: Placing nails too close together can cause overlapping sensor readings, leading to inaccurate moisture levels. By spacing them 2-4 inches apart, you ensure that each nail measures moisture in a distinct area of the soil, providing a more accurate representation of the soil's overall moisture content.
-
-2. **Avoid Sensor Interference**: If nails are placed too close, the readings from one nail might affect the other, resulting in interference. Proper spacing minimizes this risk and ensures that each sensor's reading is independent and reliable.
-
-3. **Improved Soil Coverage**: Spacing nails apart allows for better coverage of the soil, helping to identify varying moisture levels throughout the plant’s root zone. This is particularly useful for plants with larger root systems or uneven soil moisture distribution.
-
-4. **Reduced Corrosion**: When nails are too close, they may corrode faster due to concentrated electrochemical reactions. Proper spacing helps to mitigate this issue, extending the life of your sensors.
-
-By following these guidelines, you can enhance the performance and longevity of your moisture sensors, leading to more reliable and effective plant watering.
+Place the nails at least 2-3 inches apart in the soil for more accurate moisture readings. Ensure they are inserted deep enough to measure the soil's moisture content effectively.
