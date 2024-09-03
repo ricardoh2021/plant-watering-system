@@ -267,7 +267,7 @@ Model files for the 3D printed encasings are available in the 3D Printed Model F
 - Upgrade to a more accurate load cell with a higher weight capacity.
 - Add additional sensors, such as temperature or humidity sensors.
 - Upgrade to more accurate soil sensors. Here is a [video tutorial](https://www.instructables.com/Arduino-Soil-Moisture-Sensor/) to help you out.
-  - For even better readings, consider using a non-corrosive sensor, such as the one in this [tutorial](https://arduino-tutorials.net/tutorial/capacitive-soil-moisture-sensor-arduino).
+  - For even better readings, consider using a non-corrosive sensor, such as the one in this [tutorial](https://arduino-tutorials.net/tutorial/capacitive-soil-moisture-sensor-arduino). Here are some [Amazon Products](https://www.amazon.com/s?k=capacitive+soil+moisture+sensor+corrosion+resistant&crid=37LYJCJC533SY&sprefix=capacitive+soil+moisture+sensor+corrosion+resistant%2Caps%2C122&ref=nb_sb_noss_2) that you could look into.
 - Include a breadboard for better prototyping and cleaner wire management.
 - Use a float switch instead of the load cell for accurate readings of the water level.
 - Consider waterproofing the case that holds the water pitcher to prevent water damage to the scale.
