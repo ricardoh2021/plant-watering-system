@@ -80,7 +80,16 @@ For information about the original project started by Leo Marte `09, visit: [Wat
 
 If you’re new to this and feeling overwhelmed, my advice is simple: just go for it! Don't be afraid to dive in and learn something new along the way. There are countless YouTube videos and tutorials on Arduino projects that can guide you. Break the problem down into smaller pieces and build from there. Start experimenting—it's the best way to learn.
 
-This project is meant for you to expand on! Take advantage of all the tools Gettysburg College offers, like the Innovation and Creativity Lab. Don’t hesitate to ask whoever is in charge of the lab for help. Professor Neller is also a fantastic resource, so don’t be intimidated by all the wiring (my fault, haha) or if it seems complicated at first. Looks can be deceiving, but you can always start with a personal Arduino kit to get familiar with how things work. Take baby steps, and you’ll find yourself understanding more and more as you go.
+This project is meant for you to expand on! Take advantage of all the tools Gettysburg College offers, like the Innovation and Creativity Lab. Don’t hesitate to ask whoever is in charge of the lab for help. Professor Neller is also a fantastic resource, so don’t be intimidated by all the wiring (my fault, haha) or if it seems complicated at first. Looks can be deceiving, but you can always start with a personal Arduino kit to get familiar with how things work. Take baby steps, and you’ll find yourself understanding more and more as you go. Enjoy your time at Gettysburg College and feel free to clone this branch and expand on it!
+
+TL;DR
+
+- Just dive in—learning by doing is the best approach.
+- Use YouTube and tutorials to guide you through Arduino projects.
+- Break the problem into smaller pieces and build from there.
+- Leverage Gettysburg College’s Innovation and Creativity Lab.
+- Don’t hesitate to ask for help; Professor Neller is a great resource.
+- Start with a personal Arduino kit to get familiar with the basics.
 
 Have fun!
 
