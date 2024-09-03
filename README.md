@@ -1,6 +1,5 @@
 ![System Flyer](/images/flyer_info.png)
 
-
 # Water 1.0
 
 **Author:** Ricardo Hernandez
@@ -50,6 +49,7 @@
    - [Hardware Upgrade Suggestions](#hardware-upgrade-suggestions)
    - [Possible Modifications for Indoor Plant Watering System](#possible-modifications-for-indoor-plant-watering-system)
 9. [Nail Placement](#nail-placement)
+10. [General TroubleSHooting](#general-troubleshooting)
 
 ## Description
 
@@ -257,6 +257,11 @@ Model files for the 3D printed encasings are available in the 3D Printed Model F
 
 - Upgrade to a more accurate load cell with a higher weight capacity.
 - Add additional sensors, such as a temperature or humidity sensor.
+- Upgrade to more accurate soil sensors. Here is a [Video tutorial](https://www.instructables.com/Arduino-Soil-Moisture-Sensor/) to help you out.
+  - If you want even better readings, consider using a non corrosive sensor such as the one in this [tutorial.](https://arduino-tutorials.net/tutorial/capacitive-soil-moisture-sensor-arduino)
+- Include a Breaboard for better prototyping and cleaner wire management.
+- Use a Float Switch instead of the Load Cell for accurate readings of the water level.
+- Consider waterproofing the case that holds the water pitcher to prevent water damage to the scale.
 
 #### Possible Modifications for Indoor Plant Watering System
 
@@ -266,3 +271,13 @@ Model files for the 3D printed encasings are available in the 3D Printed Model F
 ## Nail Placement
 
 Place the nails at least 2-3 inches apart in the soil for more accurate moisture readings. Ensure they are inserted deep enough to measure the soil's moisture content effectively.
+
+## General Troubleshooting
+
+- Isolate the issue.
+  - If issue related to Load Cell or LED, upload Load Cell specific code to debug.
+  - If issue is related to Moisture Sensors, upload the original Water 1.0 file to isolate the issue to the Mositure Sensors.
+- Check connections! Make sure everything is plugged in and there is nothing loose. Check Schematic to help you if needed.
+- Ensure that the scale is placed in the middle, otherwise it will give innacurate readings.
+- Ensure that nails are not placed close together as this can give innaccurate readings.
+- Ensure the pump is connected via the mini breadboard wires and also through the extension cord.
