@@ -256,12 +256,13 @@ Model files for the 3D printed encasings are available in the 3D Printed Model F
 #### Hardware Upgrade Suggestions
 
 - Upgrade to a more accurate load cell with a higher weight capacity.
-- Add additional sensors, such as a temperature or humidity sensor.
-- Upgrade to more accurate soil sensors. Here is a [Video tutorial](https://www.instructables.com/Arduino-Soil-Moisture-Sensor/) to help you out.
-  - If you want even better readings, consider using a non corrosive sensor such as the one in this [tutorial.](https://arduino-tutorials.net/tutorial/capacitive-soil-moisture-sensor-arduino)
-- Include a Breaboard for better prototyping and cleaner wire management.
-- Use a Float Switch instead of the Load Cell for accurate readings of the water level.
+- Add additional sensors, such as temperature or humidity sensors.
+- Upgrade to more accurate soil sensors. Here is a [video tutorial](https://www.instructables.com/Arduino-Soil-Moisture-Sensor/) to help you out.
+  - For even better readings, consider using a non-corrosive sensor, such as the one in this [tutorial](https://arduino-tutorials.net/tutorial/capacitive-soil-moisture-sensor-arduino).
+- Include a breadboard for better prototyping and cleaner wire management.
+- Use a float switch instead of the load cell for accurate readings of the water level.
 - Consider waterproofing the case that holds the water pitcher to prevent water damage to the scale.
+- Replace the LED lights with a TFT LCD touchscreen that will display plant information via a GUI!
 
 #### Possible Modifications for Indoor Plant Watering System
 
