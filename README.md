@@ -129,6 +129,7 @@ Below is the wiring schematic for the plant watering system using Arduino.
 
 ### Configuration
 
+- **RGB LED Brightness Level**: `0.5`
 - **Calibration Factor**: `-94500`
 - **Weight Thresholds**:
   - **Empty Weight Threshold**: `1.65 lbs`
@@ -167,7 +168,7 @@ Below is the wiring schematic for the plant watering system using Arduino.
 
 #### `setColor(int R, int G, int B)`
 
-Sets the color of the RGB LED.
+Sets the color of the RGB LED by adjusting the brightness of the red, green, and blue components.
 
 #### `blinkLed(int R, int G, int B, unsigned long duration, unsigned long blinkInterval)`
 
