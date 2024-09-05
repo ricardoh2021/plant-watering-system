@@ -66,20 +66,29 @@ const long DEFAULT_ZERO_FACTOR = 28974;  // Default zero factor in case EEPROM r
 
 boolean loadCellError = false;  // Global variable to track load cell errors
 
+// Define a constant for the brightness level (percentage from 0 to 100)
+const float BRIGHTNESS_LEVEL = 0.5; // 50% brightness
+
 
 /* HELPER METHODS */
 
 /**
- * @brief Set the color of the RGB LED using RGB values.
+ * @brief Sets the color of the RGB LED by adjusting the brightness of the red, green, and blue components.
  * 
- * @param R Red component (0-255).
- * @param G Green component (0-255).
- * @param B Blue component (0-255).
+ * This function takes in RGB values and scales them according to the specified brightness level.
+ * The brightness level can be modified via the BRIGHTNESS_LEVEL constant.
+ * 
+ * @param R The intensity of the red component (0 to 255).
+ * @param G The intensity of the green component (0 to 255).
+ * @param B The intensity of the blue component (0 to 255).
+ * 
+ * The function scales each RGB value based on the BRIGHTNESS_LEVEL constant before writing them to the
+ * respective RGB pins using analogWrite.
  */
 void setColor(int R, int G, int B) {
-  analogWrite(RED_PIN, R);
-  analogWrite(GREEN_PIN, G);
-  analogWrite(BLUE_PIN, B);
+    analogWrite(RED_PIN, R * BRIGHTNESS_LEVEL);
+    analogWrite(GREEN_PIN, G * BRIGHTNESS_LEVEL);
+    analogWrite(BLUE_PIN, B * BRIGHTNESS_LEVEL);
 }
 
 /**
