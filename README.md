@@ -1,6 +1,6 @@
 ![System Flyer](/images/flyer_info.png)
 
-# Water 1.0
+# Water 1.1
 
 **Author:** Ricardo Hernandez
 
